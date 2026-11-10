@@ -1,0 +1,62 @@
+[
+  {
+    "record_id": "syn-001",
+    "source_id": "synthetic-corporate-profile",
+    "source_name": "Synthetic Corporate Profile",
+    "observed_at": "2026-11-01T12:00:00Z",
+    "subject_type": "organization",
+    "subject_value": "Harborline Community Bank (Synthetic)",
+    "predicate": "owns_or_operates",
+    "object_type": "domain",
+    "object_value": "harborline.example",
+    "source_url": "https://sources.invalid/synthetic/corporate-profile",
+    "method": "synthetic_fixture",
+    "confidence": "high",
+    "verification_status": "observed"
+  },
+  {
+    "record_id": "syn-002",
+    "source_id": "synthetic-dns-observation",
+    "source_name": "Synthetic Passive DNS Dataset",
+    "observed_at": "2026-11-02T08:30:00Z",
+    "subject_type": "domain",
+    "subject_value": "harborline.example",
+    "predicate": "has_hostname",
+    "object_type": "hostname",
+    "object_value": "online.harborline.example",
+    "source_url": "https://sources.invalid/synthetic/passive-dns",
+    "method": "synthetic_fixture",
+    "confidence": "high",
+    "verification_status": "observed"
+  },
+  {
+    "record_id": "syn-003",
+    "source_id": "synthetic-vendor-documentation",
+    "source_name": "Synthetic Vendor Documentation",
+    "observed_at": "2026-11-03T10:15:00Z",
+    "subject_type": "organization",
+    "subject_value": "Harborline Community Bank (Synthetic)",
+    "predicate": "uses_vendor",
+    "object_type": "vendor",
+    "object_value": "Northstar Cloud Services (Synthetic)",
+    "source_url": "https://sources.invalid/synthetic/vendor-documentation",
+    "method": "synthetic_fixture",
+    "confidence": "medium",
+    "verification_status": "observed"
+  },
+  {
+    "record_id": "syn-004",
+    "source_id": "synthetic-partner-disclosure",
+    "source_name": "Synthetic Partner Disclosure",
+    "observed_at": "2026-11-04T14:45:00Z",
+    "subject_type": "organization",
+    "subject_value": "Harborline Community Bank (Synthetic)",
+    "predicate": "uses_vendor",
+    "object_type": "vendor",
+    "object_value": "Northstar Cloud Services (Synthetic)",
+    "source_url": "https://sources.invalid/synthetic/partner-disclosure",
+    "method": "synthetic_fixture",
+    "confidence": "high",
+    "verification_status": "observed"
+  }
+]
