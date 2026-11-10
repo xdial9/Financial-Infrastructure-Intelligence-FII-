@@ -1,0 +1,9 @@
+{
+  "engagement_name": "FII Synthetic Demonstration",
+  "organization": "Harborline Community Bank (Synthetic)",
+  "approved_domains": ["harborline.example"],
+  "approved_sources": ["synthetic_fixture"],
+  "authorization_reference": "SYNTHETIC-DEMO-ONLY-NOT-A-REAL-CLIENT",
+  "output_dir": "../results",
+  "fixture_path": "synthetic_records.json"
+}
