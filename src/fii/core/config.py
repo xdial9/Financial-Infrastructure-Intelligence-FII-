@@ -41,6 +41,20 @@ DEFAULTS: dict[str, Any] = {
 }
 
 ALLOWED_TOP_LEVEL = {"workspace", "engagement", "scope", "collection", "sources"}
+ALLOWED_ENGAGEMENT_KEYS = {"name", "slug", "organization", "authorization_reference"}
+ALLOWED_SCOPE_KEYS = {
+    "seed_domains",
+    "approved_organizations",
+    "permitted_source_classes",
+    "allow_active_validation",
+}
+ALLOWED_COLLECTION_KEYS = {
+    "sequential",
+    "request_timeout_seconds",
+    "max_retries",
+    "retry_backoff_seconds",
+    "user_agent",
+}
 ALLOWED_SOURCE_CLASSES = {
     "public_api",
     "public_dataset",
@@ -99,6 +113,11 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     config["workspace"] = str(Path(workspace).expanduser())
 
     engagement = _require_mapping(config.get("engagement"), "engagement")
+    unknown_engagement = sorted(set(engagement) - ALLOWED_ENGAGEMENT_KEYS)
+    if unknown_engagement:
+        raise ConfigError(
+            "Unknown engagement keys: " + ", ".join(unknown_engagement)
+        )
     name = engagement.get("name")
     slug = engagement.get("slug")
     if not isinstance(name, str) or not name.strip():
@@ -118,6 +137,9 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     config["engagement"] = engagement
 
     scope = _require_mapping(config.get("scope"), "scope")
+    unknown_scope = sorted(set(scope) - ALLOWED_SCOPE_KEYS)
+    if unknown_scope:
+        raise ConfigError("Unknown scope keys: " + ", ".join(unknown_scope))
     seed_domains = _validate_string_list(scope.get("seed_domains", []), "scope.seed_domains")
     normalized_domains = []
     for domain in seed_domains:
@@ -138,6 +160,8 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
         scope.get("permitted_source_classes", []),
         "scope.permitted_source_classes",
     )
+    if not source_classes:
+        raise ConfigError("scope.permitted_source_classes must contain at least one class.")
     invalid_classes = sorted(set(source_classes) - ALLOWED_SOURCE_CLASSES)
     if invalid_classes:
         raise ConfigError(
@@ -161,6 +185,11 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     validate_scope(scope)
 
     collection = _require_mapping(config.get("collection"), "collection")
+    unknown_collection = sorted(set(collection) - ALLOWED_COLLECTION_KEYS)
+    if unknown_collection:
+        raise ConfigError(
+            "Unknown collection keys: " + ", ".join(unknown_collection)
+        )
     sequential = collection.get("sequential", True)
     if sequential is not True:
         raise ConfigError("The initial FII workflow requires collection.sequential: true.")
