@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blueprint complete. Package/CLI foundation implemented.** The next work block covers engagement configuration, scope validation and workspace setup. Collectors and the remaining pipeline stages have not yet been implemented.
+**Blueprint, package/CLI foundation, and Block 03 configuration/scope/workspace setup are implemented on main.** Block 04 run-control primitives are being verified on `build/block-04-run-controller`. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
@@ -61,18 +61,23 @@ The same CLI can be invoked with `python -m fii` or `python automate.py`.
 
 ## Current implementation boundary
 
-Implemented:
-- Installable `src/fii` package.
-- Click command entry point.
+Implemented on `main`:
+- Installable `src/fii` package and Click command entry point.
 - `fii doctor` read-only environment check.
+- YAML engagement configuration, normalized DNS scope and validation.
+- Safe per-engagement workspace initialization that preserves existing files.
 - `python -m fii` and `automate.py` entry points.
-- Offline CLI tests.
+- Offline CLI, configuration, scope and workspace tests.
+
+In review on `build/block-04-run-controller`:
+- UUID run directories, immutable manifests and redacted effective-config snapshots.
+- Atomic state writes, stage fingerprints, attempt history and interrupted-stage recovery.
+- Exclusive engagement workspace lock.
 
 Not implemented yet:
-- Engagement configuration and scope enforcement.
-- Workspace and run-state management.
-- Source collectors.
-- SQLite evidence schema.
-- Normalization, correlation and reports.
+- A user-facing `fii run` / `fii resume` orchestration command.
+- SQLite evidence schema and migrations.
+- Source collectors and preserved raw-evidence pipeline.
+- Normalization, deduplication, entity/relationship analysis and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.

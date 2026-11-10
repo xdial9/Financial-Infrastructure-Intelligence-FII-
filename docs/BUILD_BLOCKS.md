@@ -54,6 +54,8 @@ Exit criteria:
 
 ## Block 03 — Configuration, engagement scope and workspace
 
+**Status:** Completed on `main`; local operator smoke test passed on 2026-11-10.
+
 Deliverables:
 - YAML defaults and validation.
 - Engagement profile loading.
@@ -69,6 +71,21 @@ Exit criteria:
 - Existing files are preserved.
 
 ## Block 04 — Run controller, manifests, locking and recovery
+
+**Status:** In progress on `build/block-04-run-controller`; implementation and tests are staged for CI verification.
+
+Implemented so far:
+- UUID run directory creation with private file/directory permissions.
+- Immutable run manifest and effective configuration snapshot with common credential fields redacted.
+- SHA-256 configuration/scope digests and deterministic stage fingerprints.
+- Atomic state-file replacement, attempt history and matching-fingerprint resume decisions.
+- Explicit interrupted-stage recovery; an interrupted attempt is never treated as successful.
+- Exclusive, token-owned workspace lock that does not automatically steal stale locks.
+
+Still required before this block is complete:
+- CLI/run-controller integration and end-to-end interruption/resume exercise.
+- Reconciliation behavior for stale locks and incomplete run artifacts.
+- Successful local and CI test verification.
 
 Deliverables:
 - Run UUID and immutable effective config snapshot.
