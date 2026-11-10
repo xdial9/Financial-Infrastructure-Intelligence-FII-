@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -91,6 +92,8 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     config = _merge(DEFAULTS, raw)
 
     workspace = config.get("workspace")
+    if "workspace" not in raw:
+        workspace = os.environ.get("FII_WORKSPACE", workspace)
     if not isinstance(workspace, str) or not workspace.strip():
         raise ConfigError("'workspace' must be a non-empty path string.")
     config["workspace"] = str(Path(workspace).expanduser())
