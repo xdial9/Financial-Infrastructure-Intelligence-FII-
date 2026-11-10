@@ -1,12 +1,12 @@
 # Financial Infrastructure Intelligence (FII)
 
-Evidence-led intelligence for financial-sector external digital assets, technology relationships, and authorized dependency analysis.
+Evidence-led intelligence for financial-sector external digital assets, documented technology relationships, and authorized dependency analysis.
 
 FII is designed as a straightforward, sequential Python workflow: validate an engagement, collect permitted sources, normalize and correlate evidence, analyze relationships, and produce clear reports.
 
 ## Project status
 
-**Blueprint complete. Package/CLI foundation implemented.** The next work block covers engagement configuration, scope validation and workspace setup. Collectors and the remaining pipeline stages have not yet been implemented.
+**Blueprint complete. Package/CLI foundation and Block 03 configuration/scope/workspace setup implemented.** The next block adds run control, immutable run state, locking, checkpoints and recovery. Source collection has not started.
 
 ## Core documentation
 
@@ -20,6 +20,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 - [Report specification](docs/REPORT_SPECIFICATION.md)
 - [Operations and CLI specification](docs/OPERATIONS.md)
 - [Reference implementation review](docs/REFERENCE_IMPLEMENTATION_REVIEW.md)
+- [Block 03 implementation notes](docs/IMPLEMENTATION_NOTES_BLOCK03.md)
 
 ## Core design
 
@@ -55,24 +56,40 @@ pytest -q
 ruff check .
 ```
 
-The initial `doctor` command is read-only. It checks the Python and SQLite runtime and reports whether the future configuration and workspace locations exist; it does not create them.
+The `doctor` command is read-only. It checks the Python and SQLite runtime and reports whether the future configuration and workspace locations exist; it does not create them.
 
-The same CLI can be invoked with `python -m fii` or `python automate.py`.
+## Configuration and workspace
+
+Validate the synthetic engagement profile without creating files or making network requests:
+
+```bash
+fii validate --config examples/synthetic_engagement.yaml
+fii scope show --config examples/synthetic_engagement.yaml
+```
+
+Initialize a private engagement workspace only after the profile passes validation:
+
+```bash
+fii init --config examples/synthetic_engagement.yaml
+```
+
+Use `--workspace /path/to/workspace` to override the default `~/FII-Workspace`. The initializer preserves an existing engagement profile and all existing files; it does not create a database or start collection.
 
 ## Current implementation boundary
 
 Implemented:
-- Installable `src/fii` package.
-- Click command entry point.
+- Installable package and Click command entry point.
 - `fii doctor` read-only environment check.
-- `python -m fii` and `automate.py` entry points.
-- Offline CLI tests.
+- `fii validate` YAML profile validation.
+- `fii scope show` normalized, allowlisted seed-domain display.
+- `fii init` private workspace directory setup and first profile copy.
+- Domain normalization, IDNA handling, and label-boundary scope matching.
+- Offline tests for CLI, configuration, scope and workspace safety.
 
 Not implemented yet:
-- Engagement configuration and scope enforcement.
-- Workspace and run-state management.
-- Source collectors.
-- SQLite evidence schema.
-- Normalization, correlation and reports.
+- Run controller, immutable manifests, locks and recovery.
+- SQLite evidence schema and migrations.
+- CT, RDAP or other source collectors.
+- Normalization, relationship correlation and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
