@@ -54,19 +54,25 @@ Exit criteria:
 
 ## Block 03 — Configuration, engagement scope and workspace
 
+**Status:** Completed in Work Block 03.
+
 Deliverables:
-- YAML defaults and validation.
-- Engagement profile loading.
-- Domain/identifier normalization.
-- Explicit source and scope review.
-- Workspace creation and path containment.
-- Safe directory/file permissions.
-- Example synthetic configuration.
+- YAML engagement profile loader with strict structural and value validation.
+- Domain normalization, IDNA conversion and label-boundary scope matching.
+- Explicit source-class and source enable/required settings.
+- Rejection of active-validation settings and non-sequential execution.
+- Safe workspace path containment checks.
+- Private directory creation (0700) and profile copy (0600).
+- Existing profile and workspace files preserved.
+- `fii validate`, `fii scope show` and `fii init` commands.
+- Synthetic example engagement and offline tests.
 
 Exit criteria:
-- Valid synthetic config loads.
-- Invalid/malformed scope is rejected before any source operation.
-- Existing files are preserved.
+- Valid synthetic config loads and displays normalized scope.
+- Invalid/malformed scope and unsupported active settings are rejected before workspace or source activity.
+- Workspace paths remain beneath the selected root, including symlink escape checks.
+- Existing files are never overwritten by initialization.
+- 20 offline tests pass, including CLI smoke tests.
 
 ## Block 04 — Run controller, manifests, locking and recovery
 
