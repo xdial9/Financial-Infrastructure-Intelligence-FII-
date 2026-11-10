@@ -40,6 +40,7 @@ def make_workspace(tmp_path: Path):
                 "ct_logs": {
                     "enabled": True,
                     "api_key": "do-not-write-this-secret",
+                    "authorization": "Bearer do-not-write-this-token",
                 }
             },
         }
@@ -65,6 +66,7 @@ def test_create_run_writes_private_manifest_and_redacted_snapshot(tmp_path: Path
     assert state["status"] == "pending"
     assert snapshot["sources"]["ct_logs"]["api_key"] == "<redacted>"
     assert snapshot["engagement"]["authorization_reference"] == "SYNTHETIC-LAB"
+    assert snapshot["sources"]["ct_logs"]["authorization"] == "<redacted>"
     if os.name == "posix":
         assert stat.S_IMODE(run.config_snapshot.stat().st_mode) == 0o600
         assert stat.S_IMODE(run.directory.stat().st_mode) == 0o700
@@ -77,6 +79,8 @@ def test_open_run_rejects_missing_or_mismatched_run(tmp_path: Path) -> None:
     assert open_run(workspace, run.run_id) == run
     with pytest.raises(RunError, match="Invalid run ID"):
         open_run(workspace, "../outside")
+    with pytest.raises(RunError, match="does not exist"):
+        open_run(workspace, "12345678-1234-5678-1234-567812345678")
 
 
 def test_matching_successful_fingerprint_is_skipped(tmp_path: Path) -> None:
