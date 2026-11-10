@@ -1,0 +1,28 @@
+# Synthetic demonstration engagement. Replace with an explicitly approved scope.
+workspace: ~/FII-Workspace
+
+engagement:
+  name: "Synthetic Financial Institution"
+  slug: "synthetic-financial-institution"
+  organization: "Example Financial Group"
+  authorization_reference: "SYNTHETIC-LAB"
+
+scope:
+  seed_domains:
+    - "example.invalid"
+  approved_organizations:
+    - "Example Financial Group"
+  permitted_source_classes:
+    - "public_api"
+    - "public_dataset"
+    - "targeted_public_web"
+  allow_active_validation: false
+
+collection:
+  sequential: true
+  request_timeout_seconds: 20
+  max_retries: 3
+  retry_backoff_seconds: 2
+  user_agent: "FII-Research/0.1"
+
+sources: {}
