@@ -80,3 +80,21 @@ def test_workspace_environment_override(tmp_path, monkeypatch) -> None:
     config = validate_config(valid_config())
 
     assert config["workspace"] == str(tmp_path / "env-workspace")
+
+def test_default_configuration_is_not_mutated_between_loads() -> None:
+    first = validate_config(valid_config())
+    first["scope"]["permitted_source_classes"].append("customer_supplied")
+    second = validate_config(valid_config())
+
+    assert second["scope"]["permitted_source_classes"] == [
+        "public_api",
+        "public_dataset",
+    ]
+
+
+def test_validate_config_rejects_unknown_nested_keys() -> None:
+    raw = valid_config()
+    raw["scope"]["approved_domain"] = ["example.invalid"]
+
+    with pytest.raises(ConfigError, match="Unknown scope keys"):
+        validate_config(raw)
