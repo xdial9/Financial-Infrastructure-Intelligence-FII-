@@ -1,0 +1,35 @@
+engagement:
+  name: "Synthetic Financial Institution"
+  slug: "synthetic-financial-institution"
+  organization: "Example Financial Group"
+  authorization_reference: "SYNTHETIC-LAB-NOT-A-REAL-ENGAGEMENT"
+
+scope:
+  seed_domains:
+    - "example.invalid"
+    - "portal.example.invalid"
+  approved_organizations:
+    - "Example Financial Group"
+  permitted_source_classes:
+    - "public_api"
+    - "public_dataset"
+    - "targeted_public_web"
+  allow_active_validation: false
+
+collection:
+  sequential: true
+  request_timeout_seconds: 20
+  max_retries: 3
+  retry_backoff_seconds: 2
+  user_agent: "FII-Research/0.1 (synthetic offline demonstration)"
+
+sources:
+  ct_logs:
+    enabled: true
+    required: true
+  rdap:
+    enabled: true
+    required: false
+  official_corporate_web:
+    enabled: false
+    required: false
