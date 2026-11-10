@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -16,8 +17,6 @@ from fii.core.workspace import WorkspaceError, prepare_workspace
 
 def _configured_config_path() -> Path:
     """Return the default local configuration path without creating it."""
-    import os
-
     config_dir = Path(
         os.environ.get("FII_CONFIG_DIR", Path.home() / ".config" / "fii")
     ).expanduser()
@@ -57,7 +56,7 @@ def doctor() -> None:
     _print_check("SQLite", "PASS", sqlite3.sqlite_version)
 
     config_path = _configured_config_path()
-    workspace_path = Path.home() / "FII-Workspace"
+    workspace_path = Path(os.environ.get("FII_WORKSPACE", Path.home() / "FII-Workspace")).expanduser()
     if config_path.is_file():
         try:
             config = load_config(config_path)
