@@ -73,3 +73,10 @@ def test_load_config_reads_yaml_and_applies_defaults(tmp_path: Path) -> None:
 
     assert config["engagement"]["slug"] == "synthetic"
     assert config["scope"]["seed_domains"] == ["example.invalid"]
+
+
+def test_workspace_environment_override(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("FII_WORKSPACE", str(tmp_path / "env-workspace"))
+    config = validate_config(valid_config())
+
+    assert config["workspace"] == str(tmp_path / "env-workspace")
