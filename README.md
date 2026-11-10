@@ -19,6 +19,7 @@ Blueprint baseline is documented; application implementation has not started.
 - [Source register](docs/SOURCE_REGISTER.md)
 - [Report specification](docs/REPORT_SPECIFICATION.md)
 - [Operations and CLI specification](docs/OPERATIONS.md)
+- [Reference implementation review](docs/REFERENCE_IMPLEMENTATION_REVIEW.md)
 
 ## Core design
 
