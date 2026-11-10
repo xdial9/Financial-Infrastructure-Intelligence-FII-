@@ -56,7 +56,8 @@ def doctor() -> None:
     _print_check("SQLite", "PASS", sqlite3.sqlite_version)
 
     config_path = _configured_config_path()
-    workspace_path = Path(os.environ.get("FII_WORKSPACE", Path.home() / "FII-Workspace")).expanduser()
+    workspace_value = os.environ.get("FII_WORKSPACE", Path.home() / "FII-Workspace")
+    workspace_path = Path(workspace_value).expanduser()
     if config_path.is_file():
         try:
             config = load_config(config_path)
