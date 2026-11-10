@@ -340,12 +340,19 @@ def begin_stage(paths: RunPaths, stage_id: str, fingerprint: str) -> StageDecisi
     if state.get("status") in TERMINAL_RUN_STATUSES:
         raise RunError(f"Cannot add work to a terminal run ({state['status']}).")
 
-    recovered = _recover_running_stages(state)
     stages = state.setdefault("stages", {})
+    active_stages = [
+        existing_id
+        for existing_id, existing in stages.items()
+        if existing.get("status") == "running"
+    ]
+    if active_stages:
+        raise RunError(
+            "A stage is already running: " + ", ".join(active_stages)
+            + ". Reconcile interrupted work before resuming."
+        )
     prior = stages.get(stage_id)
     if prior and prior.get("status") == "success" and prior.get("fingerprint") == fingerprint:
-        if recovered:
-            _write_json_atomic(paths.state, state, overwrite=True)
         attempts = prior.get("attempts", [])
         return StageDecision(
             should_run=False,
