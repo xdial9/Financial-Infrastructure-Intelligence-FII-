@@ -1,0 +1,2 @@
+# Runtime uses only the Python standard library.
+# Development/test dependency: pytest>=8,<10
