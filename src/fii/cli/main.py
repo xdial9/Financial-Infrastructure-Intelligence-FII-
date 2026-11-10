@@ -10,6 +10,8 @@ from pathlib import Path
 import click
 
 from fii import __version__
+from fii.core.config import FIIConfigError, load_config
+from fii.core.workspace import FIIWorkspaceError, prepare_workspace
 
 
 def _configured_paths() -> tuple[Path, Path]:
@@ -25,6 +27,13 @@ def _configured_paths() -> tuple[Path, Path]:
 
 def _print_check(name: str, status: str, detail: str) -> None:
     click.echo(f"{status:<5} {name:<14} {detail}")
+
+
+def _load_profile(path: Path):
+    try:
+        return load_config(path)
+    except FIIConfigError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 @click.group(
@@ -45,33 +54,18 @@ def doctor() -> None:
 
     python_ok = sys.version_info >= (3, 11)
     python_version = ".".join(str(part) for part in sys.version_info[:3])
-    _print_check(
-        "Python",
-        "PASS" if python_ok else "FAIL",
-        f"{python_version} (requires 3.11+)",
-    )
-
-    sqlite_version = sqlite3.sqlite_version
-    _print_check("SQLite", "PASS", sqlite_version)
+    _print_check("Python", "PASS" if python_ok else "FAIL", f"{python_version} (requires 3.11+)")
+    _print_check("SQLite", "PASS", sqlite3.sqlite_version)
 
     config_path, workspace_path = _configured_paths()
     if config_path.is_file():
         _print_check("Configuration", "FOUND", str(config_path))
     else:
-        _print_check(
-            "Configuration",
-            "INFO",
-            f"not created yet: {config_path}",
-        )
-
+        _print_check("Configuration", "INFO", f"not created yet: {config_path}")
     if workspace_path.is_dir():
         _print_check("Workspace", "FOUND", str(workspace_path))
     else:
-        _print_check(
-            "Workspace",
-            "INFO",
-            f"not initialized yet: {workspace_path}",
-        )
+        _print_check("Workspace", "INFO", f"not initialized yet: {workspace_path}")
 
     click.echo("")
     if python_ok:
@@ -79,6 +73,62 @@ def doctor() -> None:
     else:
         click.echo("Doctor result: Python version is below the supported minimum.")
         raise click.exceptions.Exit(1)
+
+
+@main.command("validate")
+@click.option("--config", "config_path", required=True, type=click.Path(path_type=Path, dir_okay=False))
+def validate_config(config_path: Path) -> None:
+    """Validate an engagement profile without creating files or querying sources."""
+    config = _load_profile(config_path)
+    click.echo(f"Configuration valid: {config.engagement.name}")
+    click.echo(f"Organization: {config.engagement.organization}")
+    click.echo(f"Engagement slug: {config.engagement.slug}")
+    click.echo(f"Approved seed domains: {len(config.scope.seed_domains)}")
+    for domain in config.scope.seed_domains:
+        click.echo(f"  - {domain}")
+    click.echo(f"Enabled sources: {len(config.enabled_sources)}")
+    for source in config.enabled_sources:
+        click.echo(f"  - {source.source_id} ({'required' if source.required else 'optional'})")
+    click.echo("Active validation: disabled")
+    click.echo("No workspace or network activity performed.")
+
+
+@main.group("scope")
+def scope_group() -> None:
+    """Inspect the normalized engagement scope."""
+
+
+@scope_group.command("show")
+@click.option("--config", "config_path", required=True, type=click.Path(path_type=Path, dir_okay=False))
+def scope_show(config_path: Path) -> None:
+    """Display the approved scope and source classes from a profile."""
+    config = _load_profile(config_path)
+    click.echo(f"Scope for: {config.engagement.name}")
+    click.echo("Seed domains:")
+    for domain in config.scope.seed_domains:
+        click.echo(f"  - {domain}")
+    click.echo("Approved organizations:")
+    for organization in config.scope.approved_organizations:
+        click.echo(f"  - {organization}")
+    click.echo(f"Permitted source classes: {', '.join(config.scope.permitted_source_classes)}")
+    click.echo("Active validation: disabled")
+
+
+@main.command("init")
+@click.option("--config", "config_path", required=True, type=click.Path(path_type=Path, dir_okay=False))
+@click.option("--workspace", "workspace_root", type=click.Path(path_type=Path, file_okay=False))
+def init_workspace(config_path: Path, workspace_root: Path | None) -> None:
+    """Initialize private workspace directories after validating the profile."""
+    config = _load_profile(config_path)
+    if workspace_root is None:
+        workspace_root = _configured_paths()[1]
+    try:
+        paths = prepare_workspace(workspace_root, config.engagement.slug, config.config_path)
+    except FIIWorkspaceError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Workspace initialized: {paths.engagement}")
+    click.echo(f"Engagement profile: {paths.profile_file}")
+    click.echo("Existing files were preserved; no database or run artifacts were overwritten.")
 
 
 if __name__ == "__main__":
