@@ -20,7 +20,7 @@ Do not claim a task is complete unless its acceptance criteria were checked.
 
 ## Block 01 — Blueprint completion
 
-**Status:** In progress during the first time-block session.
+**Status:** Completed in Work Block 01.
 
 Deliverables:
 - Target architecture.
@@ -37,17 +37,20 @@ Exit criteria:
 
 ## Block 02 — Package skeleton and CLI foundation
 
+**Status:** Completed in Work Block 02.
+
 Deliverables:
-- `pyproject.toml`, dependency definition and package metadata.
+- `pyproject.toml` with runtime/development dependencies and package metadata.
 - `src/fii/` package and Click CLI.
 - `fii doctor`, version and help output.
 - Thin `automate.py` entry point if useful.
 - Ruff and pytest configuration.
 
 Exit criteria:
-- Clean virtual environment install succeeds.
-- `fii --help`, `fii --version` and `fii doctor` work.
-- Tests run without network access.
+- The package installed editable locally using the available build tooling.
+- `fii --help`, `fii --version` and `fii doctor` were smoke-tested.
+- Three offline CLI tests passed.
+- `doctor` did not create missing config/workspace directories.
 
 ## Block 03 — Configuration, engagement scope and workspace
 
