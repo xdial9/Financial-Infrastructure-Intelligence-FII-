@@ -8,7 +8,9 @@ The default task should be simple:
 
 ```bash
 fii doctor
-fii run --config engagements/example-bank.yaml
+fii validate-config --config config.example.yaml
+fii init --config config.example.yaml
+fii run --config config.example.yaml
 ```
 
 The run command validates configuration and scope, shows the selected source plan, then executes the sequential workflow. The operator should not have to manually invoke every collector.
@@ -19,9 +21,9 @@ The run command validates configuration and scope, shows the selected source pla
 |---|---|
 | `fii --version` | Display application version |
 | `fii doctor` | Check Python, configuration, SQLite and configured source prerequisites |
-| `fii init` | Create a sample engagement configuration and workspace |
+| `fii init --config FILE` | Initialize the engagement workspace from a validated configuration |
 | `fii sources list` | Show available collectors, requirements and current configuration |
-| `fii scope show` | Show normalized engagement scope before a run |
+| `fii validate-config --config FILE` | Validate a config and display its normalized scope (read-only) |
 | `fii run --config FILE` | Execute complete workflow sequentially |
 | `fii status --run-id ID` | Summarize run and stage states |
 | `fii resume --run-id ID` | Resume eligible incomplete work |
