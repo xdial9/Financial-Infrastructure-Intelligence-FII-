@@ -464,7 +464,10 @@ class WorkspaceLock:
             owner = "owner details unavailable"
             try:
                 existing = _read_json(self.path)
-                owner = f"pid={existing.get('pid', '?')}, acquired_at={existing.get('acquired_at', '?')}"
+                owner = (
+                    f"pid={existing.get('pid', '?')}, "
+                    f"acquired_at={existing.get('acquired_at', '?')}"
+                )
             except RunError:
                 pass
             raise WorkspaceLockError(
