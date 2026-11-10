@@ -8,7 +8,7 @@ import os
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +62,7 @@ class StageDecision:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -447,7 +447,7 @@ class WorkspaceLock:
         self.token = uuid.uuid4().hex
         self.acquired = False
 
-    def acquire(self) -> "WorkspaceLock":
+    def acquire(self) -> WorkspaceLock:
         if self.path.is_symlink():
             raise WorkspaceLockError(f"Refusing symlinked workspace lock: {self.path}")
         payload = {
@@ -511,7 +511,7 @@ class WorkspaceLock:
         except OSError as exc:
             raise WorkspaceLockError(f"Cannot release workspace lock {self.path}: {exc}") from exc
 
-    def __enter__(self) -> "WorkspaceLock":
+    def __enter__(self) -> WorkspaceLock:
         return self.acquire()
 
     def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
