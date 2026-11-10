@@ -419,3 +419,10 @@ An operator can:
 10. Understand source failures, collection gaps and report limitations.
 
 **The first release is successful when it produces one accurate, reproducible, evidence-linked financial infrastructure report from a synthetic or explicitly approved scope.**
+
+
+## Additional architecture specifications
+
+The target architecture, canonical evidence model, pipeline contracts, source integration register, report specification, operator workflow and time-block delivery plan are maintained in dedicated documents under `docs/`. These documents refine the initial plan without claiming that their planned components have already been implemented.
+
+The execution approach deliberately combines the simple sequential workflow in the University Audit automation with the modular packaging, CLI, tests, SQLite evidence model, run manifests and recovery patterns documented in APK Workbench.
