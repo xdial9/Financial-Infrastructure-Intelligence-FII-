@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +67,7 @@ SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 
 def _merge(defaults: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
     """Merge nested configuration mappings without mutating defaults."""
-    merged = dict(defaults)
+    merged = deepcopy(defaults)
     for key, value in overrides.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = _merge(merged[key], value)
@@ -201,8 +202,14 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
         raise ConfigError("'collection.request_timeout_seconds' must be an integer from 1 to 120.")
     if isinstance(retries, bool) or not isinstance(retries, int) or not 0 <= retries <= 5:
         raise ConfigError("'collection.max_retries' must be an integer from 0 to 5.")
-    if isinstance(backoff, bool) or not isinstance(backoff, (int, float)) or not 0 < backoff <= 60:
-        raise ConfigError("'collection.retry_backoff_seconds' must be greater than 0 and at most 60.")
+    if (
+        isinstance(backoff, bool)
+        or not isinstance(backoff, (int, float))
+        or not 0 < backoff <= 60
+    ):
+        raise ConfigError(
+            "'collection.retry_backoff_seconds' must be greater than 0 and at most 60."
+        )
     user_agent = collection.get("user_agent", "")
     if not isinstance(user_agent, str) or not user_agent.strip():
         raise ConfigError("'collection.user_agent' must be a non-empty string.")
