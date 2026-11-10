@@ -1,27 +1,46 @@
 # Financial Infrastructure Intelligence (FII)
 
-Evidence-led intelligence for financial-sector external digital assets, technology relationships, and authorized dependency analysis.
+Evidence-led intelligence for financial-sector external digital assets, documented technology relationships, and authorized dependency analysis.
 
-FII is being designed as a straightforward, sequential Python tool: validate an engagement, collect permitted sources, normalize and correlate evidence, analyze relationships, and produce clear reports.
+FII is a straightforward sequential Python tool: validate an engagement profile, collect permitted evidence, normalize and deduplicate records, correlate entities and relationships, analyze the evidence, and produce clear reports.
 
-## Project status
+## Current build status
 
-Planning and requirements. See:
+**Phase 01:** runnable synthetic end-to-end pipeline. The first slice is offline by design; it makes no network requests and uses only fictional test data. Live passive source adapters are not yet enabled.
 
-- [Project charter](docs/PROJECT_CHARTER.md)
-- [End-to-end project plan](docs/PROJECT_PLAN.md)
+## Quick start
 
-## Core design
+Python 3.11 or newer is required. Runtime code uses only the standard library.
 
-- Linear, sequential workflow.
-- Passive/public-source collection in the MVP.
-- Explicit scope and source restrictions.
-- Evidence provenance and confidence labels.
-- JSON, CSV, and Markdown outputs.
-- Logs, checkpoints, resumable runs, and preservation of prior results.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+python -m pytest
+python automate.py --config examples/synthetic_engagement.json
+```
 
-FII does not treat public reachability as authorization for active testing, and does not attempt to collect credentials, session tokens, customer records, or payment data.
+FII prints the engagement name, organization, approved domains, and source list, then asks for confirmation. The included profile and evidence records are synthetic. Use `--yes` only when deliberately skipping the confirmation prompt.
 
-## Development
+## Sequential workflow
 
-Implementation has not started. Technology choices and milestones are documented in the project plan.
+1. Load and validate the engagement profile.
+2. Confirm the configured scope.
+3. Create a unique run directory.
+4. Collect fixture evidence (no network requests in Phase 01).
+5. Normalize observations.
+6. Deduplicate while preserving every supporting source and timestamp.
+7. Build canonical entities and evidence-backed relationships.
+8. Create qualified analyst leads.
+9. Generate CSV, JSON, and Markdown reports.
+10. Save resumable run state and a summary.
+
+## Output layout
+
+Each run is written to `results/<engagement>/runs/<run-id>/` and contains `raw/`, `normalized/`, `analysis/`, `reports/`, `logs/`, `state/`, and `run-summary.json`. Existing runs are not overwritten. Use the run ID with `--resume` to continue a previous run.
+
+## Scope and safety
+
+The current build implements only `synthetic_fixture`. It performs no active scanning, authentication, or live system interaction. Public reachability is not authorization. Future source adapters must be explicitly enabled, scoped, rate-limited, and documented. Findings describe evidence and research leads; they do not claim vulnerability or internal workflow discovery from public data alone.
+
+See [Project Charter](docs/PROJECT_CHARTER.md), [End-to-End Project Plan](docs/PROJECT_PLAN.md), and [Phase 01 Implementation Notes](docs/IMPLEMENTATION_NOTES.md).
