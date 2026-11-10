@@ -90,6 +90,8 @@ def test_matching_successful_fingerprint_is_skipped(tmp_path: Path) -> None:
     first = begin_stage(run, "preflight_sources", fingerprint())
     assert first.should_run is True
     assert first.attempt == 1
+    with pytest.raises(RunError, match="A stage is already running"):
+        begin_stage(run, "collect_sources", fingerprint())
 
     finish_stage(
         run,
