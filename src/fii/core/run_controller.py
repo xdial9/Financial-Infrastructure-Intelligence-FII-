@@ -19,7 +19,7 @@ STATE_VERSION = 1
 STAGE_ID_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 SECRET_KEY_RE = re.compile(
     r"(?:api[_-]?key|secret|token|password|credential|private[_-]?key|"
-    r"authorization[_-]?(?:header|token))",
+    r"authorization)",
     re.IGNORECASE,
 )
 TERMINAL_RUN_STATUSES = {"completed", "partial", "failed", "cancelled"}
@@ -78,7 +78,7 @@ def _sha256(value: Any) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
 
 
-def _sanitize_config(value: Any, key: str = "") -> Any:
+def _sanitize_config(value: Any) -> Any:
     """Redact common credential fields before config snapshots or hashes."""
     if isinstance(value, dict):
         sanitized: dict[str, Any] = {}
@@ -89,7 +89,7 @@ def _sanitize_config(value: Any, key: str = "") -> Any:
                 and bool(SECRET_KEY_RE.search(normalized_key))
             )
             sanitized[str(child_key)] = (
-                "<redacted>" if is_secret else _sanitize_config(child_value, str(child_key))
+                "<redacted>" if is_secret else _sanitize_config(child_value)
             )
         return sanitized
     if isinstance(value, list):
@@ -169,6 +169,8 @@ def _run_paths(workspace: WorkspacePaths, run_id: str) -> RunPaths:
     directory = workspace.runs / canonical_id
     if directory.is_symlink():
         raise RunError(f"Refusing symlinked run directory: {directory}")
+    if not directory.is_dir():
+        raise RunError(f"Run directory does not exist: {directory}")
     try:
         directory.resolve(strict=True).relative_to(runs_root)
     except FileNotFoundError:
@@ -264,6 +266,10 @@ def open_run(workspace: WorkspacePaths, run_id: str) -> RunPaths:
     state = _read_json(paths.state)
     if manifest.get("run_id") != paths.run_id or state.get("run_id") != paths.run_id:
         raise RunError("Run ID does not match its manifest and state files.")
+    if manifest.get("manifest_version") != MANIFEST_VERSION:
+        raise RunError("Unsupported run manifest version.")
+    if state.get("state_version") != STATE_VERSION:
+        raise RunError("Unsupported run state version.")
     return paths
 
 
@@ -481,13 +487,19 @@ class WorkspaceLock:
             return
         try:
             current = _read_json(self.path)
-            if current.get("token") != self.token:
-                raise WorkspaceLockError(
-                    "Workspace lock ownership changed; refusing to remove another process's lock."
-                )
+        except RunError as exc:
+            if not self.path.exists():
+                self.acquired = False
+                return
+            raise WorkspaceLockError(
+                "Cannot verify workspace lock ownership; leaving the lock in place."
+            ) from exc
+        if current.get("token") != self.token:
+            raise WorkspaceLockError(
+                "Workspace lock ownership changed; refusing to remove another process's lock."
+            )
+        try:
             self.path.unlink()
-            self.acquired = False
-        except FileNotFoundError:
             self.acquired = False
         except OSError as exc:
             raise WorkspaceLockError(f"Cannot release workspace lock {self.path}: {exc}") from exc
