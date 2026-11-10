@@ -4,7 +4,7 @@
 **Repository:** xdial9/Financial-Infrastructure-Intelligence-FII-  
 **Default branch:** main  
 **Project type:** Python command-line intelligence collector and analyzer  
-**Planning status:** Proposed architecture; implementation not yet started  
+**Planning status:** Blueprint complete; package and CLI foundation implemented  
 **Reference implementation style:** attached `automate.py` (University Audit)
 
 ---
@@ -221,7 +221,6 @@ Use SQLite for the initial canonical store. Raw JSON files remain available for 
 FII/
   automate.py
   config.example.yaml
-  requirements.txt
   README.md
   docs/
     PROJECT_CHARTER.md
@@ -279,7 +278,7 @@ Keep the first implementation smaller if a module is not yet needed. Do not crea
 - Ruff and BasedPyright for code quality and type checking.
 - NetworkX may be evaluated later for local graph analysis and export; not required for first collection/report slice.
 
-Use a project virtual environment and a pinned dependency file. Store API keys in environment variables or a local ignored secrets file. Never commit credentials.
+Use a project virtual environment and keep runtime/development dependencies in `pyproject.toml` so it remains the single dependency source of truth. Store API keys in environment variables or a local ignored secrets file. Never commit credentials.
 
 ---
 
