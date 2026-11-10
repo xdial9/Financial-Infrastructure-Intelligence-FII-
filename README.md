@@ -6,9 +6,9 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-Blueprint baseline is documented; application implementation has not started.
+**Blueprint complete. Package/CLI foundation implemented.** The next work block covers engagement configuration, scope validation and workspace setup. Collectors and the remaining pipeline stages have not yet been implemented.
 
-### Core documentation
+## Core documentation
 
 - [Project charter](docs/PROJECT_CHARTER.md)
 - [End-to-end project plan](docs/PROJECT_PLAN.md)
@@ -34,6 +34,45 @@ Blueprint baseline is documented; application implementation has not started.
 
 FII does not treat public reachability as authorization for active testing, and does not attempt to collect credentials, session tokens, customer account data, or payment data.
 
-## Development
+## Development installation
 
-Implementation has not started. Work is being delivered in bounded blocks, each ending with a factual completion report and verified repository changes.
+Use a project virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+Then run the local checks:
+
+```bash
+fii --help
+fii --version
+fii doctor
+pytest -q
+ruff check .
+```
+
+The initial `doctor` command is read-only. It checks the Python and SQLite runtime and reports whether the future configuration and workspace locations exist; it does not create them.
+
+The same CLI can be invoked with `python -m fii` or `python automate.py`.
+
+## Current implementation boundary
+
+Implemented:
+- Installable `src/fii` package.
+- Click command entry point.
+- `fii doctor` read-only environment check.
+- `python -m fii` and `automate.py` entry points.
+- Offline CLI tests.
+
+Not implemented yet:
+- Engagement configuration and scope enforcement.
+- Workspace and run-state management.
+- Source collectors.
+- SQLite evidence schema.
+- Normalization, correlation and reports.
+
+Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
