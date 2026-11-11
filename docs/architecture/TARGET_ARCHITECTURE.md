@@ -208,8 +208,14 @@ A single optional source failure must not erase successful results from other so
 
 Core database corruption, inability to checkpoint, scope validation failure, or invalid configuration is a fatal run error.
 
-## 8. Security boundary
+## 8. Collection boundary and evidence semantics
 
-MVP collection is passive/public-source or uses datasets explicitly supplied by an authorized customer. Do not probe, authenticate to, exploit, or alter bank systems. Public reachability is not permission to test. Do not collect credentials, session tokens, payment data or customer records.
+FII gathers intelligence from public-source records, documented provider APIs, approved public website pages and explicitly supplied datasets. Read-only retrieval of public material and static analysis of browser-delivered HTML/JavaScript are collection methods, not attacks. Public-page retrieval must still respect the source's terms, robots policy, rate limits, and the engagement's approved domain/source scope.
 
-Any future active validation is a separate capability and engagement gate, not an implicit mode of the collector pipeline.
+A live collector is opt-in per invocation. Its context must carry an explicit operator approval flag after the source's current terms, licensing, robots policy, rate limits and retention rules have been reviewed. Built-in HTTP collection is bounded HTTPS GET only, anonymous, redirect-refusing, timeout/response-size limited and host/scope constrained. Provider-specific page limits and response semantics are recorded by the adapter.
+
+The collector pipeline does not log in, submit forms, change account or platform state, replay sessions, exploit vulnerabilities or perform service/vulnerability testing. It does not collect credentials, session tokens, payment data or customer records. Likely credential values accidentally present in public web text are redacted before retained evidence is written. It does not execute JavaScript, call API routes discovered in bundles, retrieve source maps automatically or fetch unapproved external asset hosts.
+
+API routes and methods found in JavaScript are static code references, not proof of endpoint reachability or function. Auth architecture markers are not proof of login success. Vendor names are observations with provenance—not proof of an active commercial relationship or account-validation ability. CT hostnames are time-bound certificate observations, not proof a host currently exists or resolves. Relationship correlation must preserve observed, documented, inferred and independently corroborated states separately.
+
+Provider APIs and external tools are optional adapters behind the fixed collector contract. Their terms, data licensing, rate limits, credential requirements, coverage and overlap must be reviewed before implementation or invocation. The initial registry is fixed and does not load arbitrary Python plugins dynamically.

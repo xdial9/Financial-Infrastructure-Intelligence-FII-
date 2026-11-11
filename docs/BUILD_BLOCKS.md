@@ -97,7 +97,14 @@ The next block proceeds after the user-directed CI gate; this does not imply the
 
 ## Block 05 — SQLite evidence store
 
-**Status:** Implementation submitted for CI verification on `build/block-05-sqlite-evidence-store`, stacked on the verified Block 04 head.
+**Status:** CI-verified on draft PR #2 / `build/block-05-sqlite-evidence-store`, stacked on the verified Block 04 head.
+
+Verification:
+- Latest verified Block 05 head: `f2d1b6ed1f40c91f978b9cb1121967100295b206`.
+- GitHub Actions run #10 passed for Python 3.11, 3.12 and 3.13.
+- Each matrix job reported 48 passing tests and `ruff check .` reported `All checks passed!`.
+- See [PR #2](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/2) and [run #10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982).
+- No local test result is claimed; CI is the verification source.
 
 Deliverables:
 - Numbered, checksummed SQL schema migrations and schema-version tracking.
@@ -116,19 +123,38 @@ Exit criteria:
 - A verified backup can be restored without overwriting an existing backup.
 - Latest GitHub CI is green before this block is marked complete.
 
-## Block 06 — Collector contract and first passive data source
+## Block 06 — Collector contract and first passive data sources
+
+**Status:** Code and tests CI-verified on draft [PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3), branch `build/block-06-collector-contract-passive-sources`, stacked on Block 05.
+
+Verification:
+- Verified final code head: `b1243f61f967b0c2bbc03134509108ba6179caa4`.
+- GitHub Actions [run #37](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121856605) completed successfully.
+- Python 3.11, 3.12 and 3.13 each reported **68 tests passed**; `ruff check .` reported **All checks passed!** in all three jobs.
+- No local test result is claimed; GitHub Actions is the verification source. Documentation-only commits after the verified code head are also gated by CI before the block is closed.
 
 Deliverables:
-- SourceDefinition and CollectionResult contracts.
-- Fixed source registry.
-- Fixture-backed CT source adapter.
-- Raw evidence preservation.
-- Source log and failure reporting.
+- Typed `SourceDefinition`, `CollectionContext`, `Observation`, `CollectionResult`, raw-evidence and diagnostic contracts, with deterministic source registry and explicit `builtin`, `provider_api` and `external_tool` integration kinds. No dynamic plugin loading.
+- Fixture-backed Certificate Transparency parser with approved-domain filtering, provenance and offline synthetic tests.
+- Fixture-backed static HTML/JavaScript analyzer for script assets, API routes/method hints, API documentation, source-map references, OAuth/OIDC/SAML/PKCE/auth-provider markers and vendor references including Plaid and Stripe.
+- Manual-only crt.live adapter: one HTTPS GET for one approved seed domain and one result page (default 1,000 names; maximum 10,000). It retains only in-scope names, preserves the provider response digest and retained-evidence digest, reports capped/incomplete pages as partial, and does not retry rate limits automatically. Provider documentation describes a 120-request/minute per-address rate limit; FII makes one request per invocation and surfaces `Retry-After`. See [crt.live API documentation](https://crt.live/about).
+- Manual-only public website snapshot adapter: one approved HTTPS HTML page plus up to 20 same-scope JavaScript asset request attempts by default. Anonymous GET only, no cookies/auth headers, redirects refused, no query-bearing page URLs, no unapproved CDN fetches, no source-map retrieval, no API route invocation and no JavaScript execution.
+- Private content-addressed raw evidence, likely credential-value redaction in retained web text, original/retained digests, structured source diagnostics and fatal evidence-write failures.
+- Live adapters require explicit per-run `live_collection_approved=True`. No real provider, website or financial institution was contacted during development or CI; tests use mocked HTTP responses.
+
+Interpretation rules:
+- An API route or HTTP method extracted from JavaScript is a static code reference, not proof the route is reachable or functional. It is never invoked by the collector.
+- An auth marker is an architecture hint, not proof of login/session success.
+- A vendor name such as Plaid is an integration reference, not proof of an active institutional relationship or account-validation capability.
+- A crt.live hostname is a certificate-transparency observation, not proof the host currently exists, resolves or is operated by the named institution.
+- Observed, documented, inferred and independently corroborated relationships remain distinct; collectors emit observations only.
 
 Exit criteria:
-- Fixture-based run works offline.
-- One approved live query can be run manually after source terms/limits are checked.
-- Raw response, timestamp, hash and source identity are preserved.
+- Synthetic fixture runs are deterministic and offline, with provenance-linked evidence.
+- A manually approved CT provider query and a manually approved public HTML/JS snapshot can be invoked through the collector contract; CI exercises these paths with mocked HTTP and never calls an external service.
+- HTTP collection is bounded by HTTPS, approved domain scope, one-page/source constraints, timeouts, response-size limits, request spacing and explicit manual approval.
+- Source errors are surfaced; raw evidence persistence failures remain fatal.
+- Latest PR #3 head and documentation updates have green GitHub CI before Block 06 is marked complete.
 
 ## Block 07 — RDAP and official-source enrichment
 

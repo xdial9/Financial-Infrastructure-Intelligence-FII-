@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blocks 01–03 are implemented on main.** Block 04 run-control primitives passed GitHub Actions CI on the latest PR #1 head, but full CLI orchestration and reconciliation remain future work. Block 05 adds the SQLite evidence-store foundation on a stacked review branch. A complete source-to-report pipeline is not available yet.
+**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06's fixture and manual public-source collectors passed run #37 on draft PR #3: 68 tests and Ruff clean on Python 3.11, 3.12 and 3.13. Block 06 includes CT hostname collection from crt.live and approved one-page HTML/JavaScript snapshots; no live query was executed during development or CI. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
@@ -20,11 +20,15 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 - [Report specification](docs/REPORT_SPECIFICATION.md)
 - [Operations and CLI specification](docs/OPERATIONS.md)
 - [Reference implementation review](docs/REFERENCE_IMPLEMENTATION_REVIEW.md)
+- [Block 05 implementation notes](docs/IMPLEMENTATION_NOTES_BLOCK05.md)
+- [Block 06 implementation notes](docs/IMPLEMENTATION_NOTES_BLOCK06.md)
 
 ## Core design
 
 - Linear, sequential workflow.
-- Passive/public-source collection in the MVP.
+- Evidence collection from public-source records, provider datasets and documented APIs.
+- Static analysis of saved browser-delivered HTML/JavaScript for API, authentication-architecture and integration references.
+- Optional provider-API and external-tool adapter seams without dynamic plugin loading.
 - Explicit engagement scope and source restrictions.
 - Evidence provenance and verification states.
 - Explainable entity and relationship correlation.
@@ -74,15 +78,24 @@ Implemented on `build/block-04-run-controller` and CI-verified in draft PR #1:
 - Atomic state writes, stage fingerprints, attempt history and interrupted-stage recovery.
 - Exclusive engagement workspace lock.
 
-In review on `build/block-05-sqlite-evidence-store`:
+CI-verified on `build/block-05-sqlite-evidence-store` / draft PR #2:
 - Numbered SQLite migrations for engagements, runs, stage attempts, source definitions/executions, observations, provenance links, entities, relationships and findings.
 - Standard-library connection, transaction, integrity-check and no-overwrite backup helpers.
 - Foreign-key enforcement on every application-created connection and persistence errors that fail closed.
-- Synthetic offline tests for migrations, constraints, rollback, backup/restore and persistence failures.
+- 48 synthetic offline tests passed on Python 3.11, 3.12 and 3.13; Ruff passed in all jobs ([run #10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982)).
+
+CI-verified in draft PR #3 on `build/block-06-collector-contract-passive-sources`:
+- Stable collector contracts and explicit registry entries for fixture sources, crt.live and manual public-website snapshots; every source is disabled by default.
+- Synthetic CT fixture adapter plus one-page crt.live public API collection for one approved domain; retained raw JSON is filtered to that domain with original-response and retained-evidence SHA-256 values.
+- Static HTML/JavaScript analysis for API paths/method hints, JavaScript assets/source maps, API documentation, OAuth/OIDC/SAML/PKCE/auth-provider markers and provider references.
+- Manual public website snapshot adapter: one HTTPS HTML page plus up to 20 same-scope JavaScript asset request attempts by default, using anonymous GET requests only. Redirects are refused; JavaScript is never executed; API routes are catalogued but never requested.
+- Private content-addressed evidence, likely credential-value redaction, source diagnostics and fatal evidence-write failures.
+- GitHub Actions run #37 passed 68 tests and Ruff on Python 3.11, 3.12 and 3.13.
 
 Not implemented yet:
-- A user-facing `fii run` / `fii resume` orchestration command.
-- Source collectors and preserved raw-evidence pipeline.
-- Normalization, deduplication/correlation pipelines and report generation.
+- A user-facing `fii run`, `fii resume` or `fii collect` orchestration command.
+- Automatic robots/terms analysis; an operator must review source terms, robots policy and limits before setting the per-run `live_collection_approved=True` flag.
+- RDAP, official corporate/regulatory enrichment, additional provider APIs or external-tool integrations.
+- Dynamic JavaScript execution, login/authentication, session replay, endpoint validation, account actions, normalization/correlation pipelines and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
