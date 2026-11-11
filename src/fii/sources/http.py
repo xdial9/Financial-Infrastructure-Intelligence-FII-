@@ -98,7 +98,10 @@ def fetch_public_resource(
             )
             raise SourceCollectionError(
                 "rate_limited",
-                f"The public source returned HTTP 429; do not retry before the provider permits it.{detail}",
+                (
+                    "The public source returned HTTP 429; do not retry before "
+                    f"the provider permits it.{detail}"
+                ),
             ) from exc
         raise SourceCollectionError(
             "source_http_error",
