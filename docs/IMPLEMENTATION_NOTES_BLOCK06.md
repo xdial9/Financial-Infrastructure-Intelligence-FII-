@@ -1,4 +1,4 @@
-# Block 06 — Collector contract and first public-source collectors
+# Block 06 — Collector contracts, fixtures and manual public-source collectors
 
 **Branch:** `build/block-06-collector-contract-passive-sources`  
 **Base branch:** `build/block-05-sqlite-evidence-store`  
