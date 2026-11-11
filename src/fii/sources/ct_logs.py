@@ -151,7 +151,9 @@ class CTLogsFixtureCollector:
                         attributes={
                             "certificate_id": certificate_id,
                             "common_name": _string_value(record.get("common_name")),
-                            "issuer": _string_value(record.get("issuer_name") or record.get("issuer")),
+                            "issuer": _string_value(
+                                record.get("issuer_name") or record.get("issuer")
+                            ),
                             "not_before": _string_value(record.get("not_before")),
                             "not_after": _string_value(record.get("not_after")),
                             "scope_match": True,
