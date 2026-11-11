@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blueprint, package/CLI foundation, and Block 03 configuration/scope/workspace setup are implemented on main.** Block 04 run-control primitives are being verified on `build/block-04-run-controller`. A complete source-to-report pipeline is not available yet.
+**Blocks 01–03 are implemented on main.** Block 04 run-control primitives passed GitHub Actions CI on the latest PR #1 head, but full CLI orchestration and reconciliation remain future work. Block 05 adds the SQLite evidence-store foundation on a stacked review branch. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
@@ -69,15 +69,20 @@ Implemented on `main`:
 - `python -m fii` and `automate.py` entry points.
 - Offline CLI, configuration, scope and workspace tests.
 
-In review on `build/block-04-run-controller`:
+Implemented on `build/block-04-run-controller` and CI-verified in draft PR #1:
 - UUID run directories, immutable manifests and redacted effective-config snapshots.
 - Atomic state writes, stage fingerprints, attempt history and interrupted-stage recovery.
 - Exclusive engagement workspace lock.
 
+In review on `build/block-05-sqlite-evidence-store`:
+- Numbered SQLite migrations for engagements, runs, stage attempts, source definitions/executions, observations, provenance links, entities, relationships and findings.
+- Standard-library connection, transaction, integrity-check and no-overwrite backup helpers.
+- Foreign-key enforcement on every application-created connection and persistence errors that fail closed.
+- Synthetic offline tests for migrations, constraints, rollback, backup/restore and persistence failures.
+
 Not implemented yet:
 - A user-facing `fii run` / `fii resume` orchestration command.
-- SQLite evidence schema and migrations.
 - Source collectors and preserved raw-evidence pipeline.
-- Normalization, deduplication, entity/relationship analysis and report generation.
+- Normalization, deduplication/correlation pipelines and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
