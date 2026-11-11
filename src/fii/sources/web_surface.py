@@ -7,10 +7,12 @@ or contacts the site represented by the fixtures.
 from __future__ import annotations
 
 import re
+import time
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
+from fii.sources.http import fetch_public_resource
 from fii.sources.contracts import (
     CollectionContext,
     CollectionResult,
@@ -498,6 +500,365 @@ class WebSurfaceFixtureCollector:
                         },
                     ),
                 )
+
+
+class PublicWebsiteSnapshotCollector:
+    """Fetch one approved public HTML page and its bounded script references.
+
+    Requests are anonymous GETs over HTTPS, redirects are refused, and only
+    hosts inside the explicit engagement domain scope are eligible for fetching.
+    JavaScript is retained and parsed as text only; it is never executed.
+    """
+
+    definition = SourceDefinition(
+        source_id="website_public",
+        name="Approved public website HTML and JavaScript snapshot",
+        adapter_version="1.0.0",
+        source_class="targeted_public_web",
+        description=(
+            "Manually approved single-page HTTPS retrieval plus bounded, "
+            "same-scope JavaScript asset retrieval. No login or state changes."
+        ),
+        requires_credentials=False,
+        default_enabled=False,
+        integration_kind="builtin",
+        supported_observation_types=(
+            "javascript_asset",
+            "api_endpoint",
+            "api_documentation_reference",
+            "source_map_reference",
+            "auth_structure",
+            "integration_reference",
+        ),
+    )
+
+    def collect(self, context: CollectionContext) -> CollectionResult:
+        if not context.source_url:
+            raise SourceCollectionError(
+                "source_url_required",
+                "Public website collection requires one explicit source URL.",
+            )
+        approved_domains = {
+            normalize_domain(domain) for domain in context.approved_domains
+        }
+        if not approved_domains:
+            raise SourceCollectionError(
+                "empty_scope",
+                "Public website collection requires approved seed domains.",
+            )
+        page_url = _approved_https_url(context.source_url, approved_domains)
+        if page_url is None:
+            raise SourceCollectionError(
+                "url_out_of_scope",
+                "The source URL must be HTTPS, contain no query or credentials, "
+                "and belong to an approved domain.",
+            )
+
+        page = fetch_public_resource(
+            page_url,
+            context,
+            accept="text/html,application/xhtml+xml",
+        )
+        if page.content_type not in {"text/html", "application/xhtml+xml"}:
+            raise SourceCollectionError(
+                "unexpected_page_content_type",
+                "The approved page did not return an HTML content type.",
+            )
+        if len(page.body) > context.max_fixture_bytes:
+            raise SourceCollectionError(
+                "collection_too_large",
+                "The page exceeds the configured total collection size limit.",
+            )
+
+        collected_at = context.collected_at or utc_now()
+        raw_evidence = []
+        observations: list[Observation] = []
+        diagnostics: list[SourceDiagnostic] = []
+        seen: set[tuple[str, str, str]] = set()
+        analyzer = WebSurfaceFixtureCollector()
+
+        page_evidence = write_raw_evidence(
+            context,
+            source_id=self.definition.source_id,
+            original_name="index.html",
+            content=page.body,
+            media_type="text/html",
+            redact_text=True,
+        )
+        raw_evidence.append(page_evidence)
+        total_bytes = len(page.body)
+
+        try:
+            page_text = (
+                Path(context.raw_directory) / page_evidence.relative_path
+            ).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise SourceCollectionError(
+                "page_not_utf8",
+                "The approved HTML page could not be decoded as UTF-8 after redaction.",
+            ) from exc
+
+        parser = _MarkupSignals()
+        try:
+            parser.feed(page_text)
+            parser.close()
+        except Exception:
+            diagnostics.append(
+                SourceDiagnostic(
+                    "html_parse_partial",
+                    "Some HTML markup signals could not be parsed.",
+                )
+            )
+
+        for item in parser.documentation_links:
+            analyzer._append_doc_observation(
+                observations,
+                seen,
+                context,
+                page_evidence.sha256,
+                "index.html",
+                item,
+                collected_at,
+            )
+
+        analyzer._analyze_text(
+            page_text,
+            context=context,
+            evidence_sha256=page_evidence.sha256,
+            evidence_file="index.html",
+            collected_at=collected_at,
+            observations=observations,
+            seen=seen,
+        )
+        for inline_script in parser.inline_scripts:
+            analyzer._analyze_text(
+                inline_script,
+                context=context,
+                evidence_sha256=page_evidence.sha256,
+                evidence_file="index.html",
+                collected_at=collected_at,
+                observations=observations,
+                seen=seen,
+            )
+
+        records_received = 1
+        records_accepted = 1
+        fetched_assets = 0
+        seen_asset_urls: set[str] = set()
+
+        for item in parser.script_sources:
+            source_ref = _safe_reference(item["src"] or "")
+            if not source_ref:
+                continue
+            absolute_url = urljoin(page.final_url, source_ref)
+            normalized_url = _approved_https_url(absolute_url, approved_domains)
+            asset_url = _safe_reference(absolute_url) or source_ref
+
+            if normalized_url is None:
+                analyzer._append(
+                    observations,
+                    seen,
+                    Observation(
+                        observation_type="javascript_asset",
+                        observed_value=asset_url,
+                        collected_at=collected_at,
+                        source_url=page.final_url,
+                        raw_sha256=page_evidence.sha256,
+                        attributes={
+                            "evidence_file": "index.html",
+                            "integrity": item["integrity"],
+                            "script_type": item["type"],
+                            "fetched": False,
+                            "skip_reason": "outside_approved_https_scope",
+                        },
+                    ),
+                )
+                continue
+
+            if normalized_url in seen_asset_urls:
+                continue
+            seen_asset_urls.add(normalized_url)
+
+            if fetched_assets >= context.max_linked_assets:
+                diagnostics.append(
+                    SourceDiagnostic(
+                        "asset_limit_reached",
+                        "The configured JavaScript asset limit was reached.",
+                    )
+                )
+                analyzer._append(
+                    observations,
+                    seen,
+                    Observation(
+                        observation_type="javascript_asset",
+                        observed_value=asset_url,
+                        collected_at=collected_at,
+                        source_url=page.final_url,
+                        raw_sha256=page_evidence.sha256,
+                        attributes={
+                            "evidence_file": "index.html",
+                            "fetched": False,
+                            "skip_reason": "asset_limit_reached",
+                        },
+                    ),
+                )
+                continue
+
+            if context.minimum_request_interval_seconds:
+                time.sleep(context.minimum_request_interval_seconds)
+
+            try:
+                script = fetch_public_resource(
+                    normalized_url,
+                    context,
+                    accept="application/javascript,text/javascript,*/*;q=0.1",
+                )
+            except SourceCollectionError as exc:
+                diagnostics.append(
+                    SourceDiagnostic(
+                        exc.code,
+                        f"A referenced script asset was not fetched: {exc.message}",
+                    )
+                )
+                analyzer._append(
+                    observations,
+                    seen,
+                    Observation(
+                        observation_type="javascript_asset",
+                        observed_value=asset_url,
+                        collected_at=collected_at,
+                        source_url=page.final_url,
+                        raw_sha256=page_evidence.sha256,
+                        attributes={
+                            "evidence_file": "index.html",
+                            "fetched": False,
+                            "skip_reason": exc.code,
+                        },
+                    ),
+                )
+                continue
+
+            records_received += 1
+            if script.content_type not in {
+                "application/javascript",
+                "text/javascript",
+                "application/x-javascript",
+            } and not urlsplit(normalized_url).path.lower().endswith((".js", ".mjs")):
+                diagnostics.append(
+                    SourceDiagnostic(
+                        "unexpected_script_content_type",
+                        "A referenced script did not return a JavaScript content type.",
+                    )
+                )
+                continue
+            total_bytes += len(script.body)
+            if total_bytes > context.max_fixture_bytes:
+                diagnostics.append(
+                    SourceDiagnostic(
+                        "collection_size_limit_reached",
+                        "Additional JavaScript assets were skipped at the total size limit.",
+                    )
+                )
+                break
+            try:
+                script.body.decode("utf-8")
+            except UnicodeDecodeError:
+                diagnostics.append(
+                    SourceDiagnostic(
+                        "script_not_utf8",
+                        "A referenced JavaScript asset was skipped because it was not UTF-8.",
+                    )
+                )
+                continue
+
+            evidence = write_raw_evidence(
+                context,
+                source_id=self.definition.source_id,
+                original_name=Path(urlsplit(normalized_url).path).name or "asset.js",
+                content=script.body,
+                media_type="application/javascript",
+                redact_text=True,
+            )
+            raw_evidence.append(evidence)
+            fetched_assets += 1
+            records_accepted += 1
+            analyzer._append(
+                observations,
+                seen,
+                Observation(
+                    observation_type="javascript_asset",
+                    observed_value=asset_url,
+                    collected_at=collected_at,
+                    source_url=page.final_url,
+                    raw_sha256=evidence.sha256,
+                    attributes={
+                        "evidence_file": evidence.relative_path,
+                        "integrity": item["integrity"],
+                        "script_type": item["type"],
+                        "fetched": True,
+                    },
+                ),
+            )
+            try:
+                script_text = (
+                    Path(context.raw_directory) / evidence.relative_path
+                ).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as exc:
+                raise EvidenceWriteError(
+                    "Retained JavaScript evidence could not be read for analysis."
+                ) from exc
+            analyzer._analyze_text(
+                script_text,
+                context=context,
+                evidence_sha256=evidence.sha256,
+                evidence_file=evidence.relative_path,
+                collected_at=collected_at,
+                observations=observations,
+                seen=seen,
+            )
+
+        status = (
+            "partial"
+            if any(item.severity == "warning" for item in diagnostics)
+            else "success"
+        )
+        return CollectionResult(
+            source_id=self.definition.source_id,
+            status=status,
+            started_at=collected_at,
+            finished_at=utc_now(),
+            records_received=records_received,
+            records_accepted=records_accepted,
+            raw_evidence=tuple(raw_evidence),
+            observations=tuple(observations),
+            diagnostics=tuple(diagnostics),
+        )
+
+
+def _approved_https_url(value: str, approved_domains: set[str]) -> str | None:
+    """Return a normalized URL only when it is HTTPS and in approved scope."""
+    try:
+        parts = urlsplit(value)
+        if (
+            parts.scheme.lower() != "https"
+            or not parts.hostname
+            or parts.username
+            or parts.password
+            or parts.query
+            or parts.fragment
+            or parts.port not in {None, 443}
+        ):
+            return None
+        hostname = normalize_domain(parts.hostname)
+    except (ValueError, TypeError):
+        return None
+    if not any(
+        hostname == domain or hostname.endswith(f".{domain}")
+        for domain in approved_domains
+    ):
+        return None
+    path = parts.path or "/"
+    return urlunsplit(("https", hostname, path, "", ""))
 
 
 def _media_type(suffix: str) -> str:
