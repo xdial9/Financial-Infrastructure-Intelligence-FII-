@@ -12,6 +12,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
+from fii.core.scope import normalize_domain
 from fii.sources.http import fetch_public_resource
 from fii.sources.contracts import (
     CollectionContext,
