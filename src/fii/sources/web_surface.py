@@ -645,7 +645,7 @@ class PublicWebsiteSnapshotCollector:
 
         records_received = 1
         records_accepted = 1
-        fetched_assets = 0
+        attempted_assets = 0
         seen_asset_urls: set[str] = set()
 
         for item in parser.script_sources:
@@ -681,7 +681,7 @@ class PublicWebsiteSnapshotCollector:
                 continue
             seen_asset_urls.add(normalized_url)
 
-            if fetched_assets >= context.max_linked_assets:
+            if attempted_assets >= context.max_linked_assets:
                 diagnostics.append(
                     SourceDiagnostic(
                         "asset_limit_reached",
@@ -706,6 +706,7 @@ class PublicWebsiteSnapshotCollector:
                 )
                 continue
 
+            attempted_assets += 1
             if context.minimum_request_interval_seconds:
                 time.sleep(context.minimum_request_interval_seconds)
 
@@ -782,7 +783,6 @@ class PublicWebsiteSnapshotCollector:
                 redact_text=True,
             )
             raw_evidence.append(evidence)
-            fetched_assets += 1
             records_accepted += 1
             analyzer._append(
                 observations,
