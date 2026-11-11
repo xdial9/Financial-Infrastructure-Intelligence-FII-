@@ -24,7 +24,6 @@ from fii.sources.raw_evidence import write_raw_evidence
 
 _ALLOWED_SUFFIXES = {".html", ".htm", ".js"}
 _MAX_FILES = 100
-_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 _FETCH_RE = re.compile(
     r"""\bfetch\s*\(\s*(['"\x60])(?P<url>[^'"\x60]{1,2048})\1"""
     r"""(?:\s*,\s*\{(?P<options>[^}]{0,1000})\})?""",
@@ -54,9 +53,18 @@ _API_DOC_RE = re.compile(
 _AUTH_MARKERS = (
     ("oauth2", re.compile(r"\boauth2?\b", re.IGNORECASE)),
     ("openid_connect", re.compile(r"\bopenid(?:\s+connect)?\b|\boidc\b", re.IGNORECASE)),
-    ("pkce", re.compile(r"\bpkce\b|\bcode_challenge(?:_method)?\b|\bcode_verifier\b", re.IGNORECASE)),
+    (
+        "pkce",
+        re.compile(
+            r"\bpkce\b|\bcode_challenge(?:_method)?\b|\bcode_verifier\b",
+            re.IGNORECASE,
+        ),
+    ),
     ("saml", re.compile(r"\bsaml(?:2)?\b", re.IGNORECASE)),
-    ("authorization_endpoint", re.compile(r"\bauthorization_endpoint\b|/authorize(?:\b|/)", re.IGNORECASE)),
+    (
+        "authorization_endpoint",
+        re.compile(r"\bauthorization_endpoint\b|/authorize(?:\b|/)", re.IGNORECASE),
+    ),
     ("token_endpoint", re.compile(r"\btoken_endpoint\b|/oauth/token(?:\b|/)", re.IGNORECASE)),
     ("userinfo_endpoint", re.compile(r"\buserinfo_endpoint\b|/userinfo(?:\b|/)", re.IGNORECASE)),
     ("jwks_uri", re.compile(r"\bjwks_uri\b|/\.well-known/jwks\.json", re.IGNORECASE)),
@@ -201,7 +209,10 @@ class WebSurfaceFixtureCollector:
                 diagnostics.append(
                     SourceDiagnostic(
                         "fixture_file_unreadable",
-                        "A website-surface fixture file was skipped because it was unreadable or outside its root.",
+                        (
+                            "A website-surface fixture file was skipped because it was "
+                            "unreadable or outside its root."
+                        ),
                     )
                 )
                 continue
@@ -230,7 +241,10 @@ class WebSurfaceFixtureCollector:
                 diagnostics.append(
                     SourceDiagnostic(
                         "fixture_not_text",
-                        f"Fixture {relative} was preserved but could not be analyzed as UTF-8 text.",
+                        (
+                            f"Fixture {relative} was preserved but could not be analyzed "
+                            "as UTF-8 text."
+                        ),
                     )
                 )
                 continue
@@ -239,7 +253,10 @@ class WebSurfaceFixtureCollector:
                 diagnostics.append(
                     SourceDiagnostic(
                         "sensitive_values_redacted",
-                        f"{evidence.redactions_applied} likely credential value(s) were redacted in {relative}.",
+                        (
+                            f"{evidence.redactions_applied} likely credential value(s) "
+                            f"were redacted in {relative}."
+                        ),
                         "info",
                     )
                 )
