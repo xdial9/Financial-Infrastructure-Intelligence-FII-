@@ -125,30 +125,36 @@ Exit criteria:
 
 ## Block 06 — Collector contract and first passive data sources
 
-**Status:** Implementation on `build/block-06-collector-contract-passive-sources`; verification is pending in stacked draft PR #3.
+**Status:** Code and tests CI-verified on draft [PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3), branch `build/block-06-collector-contract-passive-sources`, stacked on Block 05.
+
+Verification:
+- Verified code head: `8607e615061278d3c1b3ac31922ff9af85393bf6`.
+- GitHub Actions [run #31](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121459495) completed successfully.
+- Python 3.11, 3.12 and 3.13 each reported **67 tests passed**; `ruff check .` reported **All checks passed!** in all three jobs.
+- No local test result is claimed; GitHub Actions is the verification source. Documentation-only commits after the verified code head are also gated by CI before the block is closed.
 
 Deliverables:
-- Typed `SourceDefinition`, `CollectionContext`, `Observation`, `CollectionResult` and diagnostic contracts.
-- Explicit fixed registry with stable source IDs and adapter metadata for built-in, provider-API and external-tool integration paths. No dynamic code loading.
-- Fixture-backed Certificate Transparency adapter with explicit approved-domain filtering.
-- Fixture-backed website-surface adapter for saved HTML and JavaScript. It catalogs script assets, static API routes and HTTP methods when identifiable, API-documentation references, source-map references, OAuth/OIDC/SAML/PKCE and identity-provider markers, and third-party integration references such as Plaid and Stripe.
-- Content-addressed, private, no-overwrite raw evidence storage. HTML/JavaScript evidence is sanitized for likely credential values before storage; original and retained hashes are both recorded.
-- Structured source diagnostics and sanitized execution logging. Raw evidence persistence failures remain fatal.
-- Synthetic fixtures only; no institution or provider is contacted. JavaScript is parsed as text and never executed. Asset and source-map URLs are catalogued but not fetched by the fixture adapter.
+- Typed `SourceDefinition`, `CollectionContext`, `Observation`, `CollectionResult`, raw-evidence and diagnostic contracts, with deterministic source registry and explicit `builtin`, `provider_api` and `external_tool` integration kinds. No dynamic plugin loading.
+- Fixture-backed Certificate Transparency parser with approved-domain filtering, provenance and offline synthetic tests.
+- Fixture-backed static HTML/JavaScript analyzer for script assets, API routes/method hints, API documentation, source-map references, OAuth/OIDC/SAML/PKCE/auth-provider markers and vendor references including Plaid and Stripe.
+- Manual-only crt.live adapter: one HTTPS GET for one approved seed domain and one result page (default 1,000 names; maximum 10,000). It retains only in-scope names, preserves the provider response digest and retained-evidence digest, reports capped/incomplete pages as partial, and does not retry rate limits automatically. Provider documentation describes a 120-request/minute per-address rate limit; FII makes one request per invocation and surfaces `Retry-After`. See [crt.live API documentation](https://crt.live/about).
+- Manual-only public website snapshot adapter: one approved HTTPS HTML page plus up to 20 same-scope JavaScript assets by default. Anonymous GET only, no cookies/auth headers, redirects refused, no query-bearing page URLs, no unapproved CDN fetches, no source-map retrieval, no API route invocation and no JavaScript execution.
+- Private content-addressed raw evidence, likely credential-value redaction in retained web text, original/retained digests, structured source diagnostics and fatal evidence-write failures.
+- Live adapters require explicit per-run `live_collection_approved=True`. No real provider, website or financial institution was contacted during development or CI; tests use mocked HTTP responses.
 
 Interpretation rules:
-- An API route is an observed static reference, not proof that the route is reachable or usable.
-- An auth marker is an architecture hint, not proof of a valid login/session.
-- A provider name is an integration reference, not proof that the institution has an active provider relationship or that a customer account can be validated.
-- Provider API and external-tool adapters can implement the same contract in later blocks; credentials, if ever required, must be handled outside evidence and logs.
+- An API route or HTTP method extracted from JavaScript is a static code reference, not proof the route is reachable or functional. It is never invoked by the collector.
+- An auth marker is an architecture hint, not proof of login/session success.
+- A vendor name such as Plaid is an integration reference, not proof of an active institutional relationship or account-validation capability.
+- A crt.live hostname is a certificate-transparency observation, not proof the host currently exists, resolves or is operated by the named institution.
+- Observed, documented, inferred and independently corroborated relationships remain distinct; collectors emit observations only.
 
 Exit criteria:
-- Synthetic fixture runs produce deterministic, provenance-linked observations offline.
-- CT names are limited to approved seed domains.
-- API methods, JavaScript assets, auth markers and provider references are recorded with the evidence file/hash and appropriate caveats.
-- Likely credential values are not retained in web-surface evidence.
-- Source failures are reported; evidence-write failures are fatal.
-- A live provider query remains a separate manual step after provider terms, limits and an approved source have been verified; no live request is part of this block's CI.
+- Synthetic fixture runs are deterministic and offline, with provenance-linked evidence.
+- A manually approved CT provider query and a manually approved public HTML/JS snapshot can be invoked through the collector contract; CI exercises these paths with mocked HTTP and never calls an external service.
+- HTTP collection is bounded by HTTPS, approved domain scope, one-page/source constraints, timeouts, response-size limits, request spacing and explicit manual approval.
+- Source errors are surfaced; raw evidence persistence failures remain fatal.
+- Latest PR #3 head and documentation updates have green GitHub CI before Block 06 is marked complete.
 
 ## Block 07 — RDAP and official-source enrichment
 
