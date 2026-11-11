@@ -5,14 +5,18 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from email.message import Message
 from pathlib import Path
+from urllib.error import HTTPError
 from uuid import uuid4
 
 import pytest
 
 from fii.sources import (
+    CTLiveCollector,
     CollectionContext,
     EvidenceWriteError,
+    PublicWebsiteSnapshotCollector,
     SourceDefinition,
     SourceRegistry,
     get_default_registry,
@@ -26,12 +30,58 @@ from fii.sources.web_surface import WebSurfaceFixtureCollector
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "sources"
 
 
+class FakeHTTPResponse:
+    """Small context-managed response double; never opens a socket."""
+
+    def __init__(
+        self,
+        body: bytes,
+        *,
+        content_type: str,
+        final_url: str,
+    ) -> None:
+        self.body = body
+        self.final_url = final_url
+        self.headers = Message()
+        self.headers["Content-Type"] = content_type
+        self.headers["Content-Length"] = str(len(body))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+    def read(self, limit: int) -> bytes:
+        return self.body[:limit]
+
+    def geturl(self) -> str:
+        return self.final_url
+
+
+class FakeHTTPOpener:
+    """Return predefined responses and capture requests for assertions."""
+
+    def __init__(self, responses: list[FakeHTTPResponse | Exception]) -> None:
+        self.responses = list(responses)
+        self.requests = []
+
+    def open(self, request, timeout: int):
+        self.requests.append((request, timeout))
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
 def make_context(
     tmp_path: Path,
     *,
     fixture_path: Path | None,
     approved_domains: tuple[str, ...] = ("example.invalid",),
     raw_directory: Path | None = None,
+    live_collection_approved: bool = False,
+    minimum_request_interval_seconds: float = 1.0,
 ) -> CollectionContext:
     return CollectionContext(
         run_id=str(uuid4()),
@@ -39,6 +89,8 @@ def make_context(
         fixture_path=fixture_path,
         approved_domains=approved_domains,
         source_url="https://www.example.invalid/",
+        live_collection_approved=live_collection_approved,
+        minimum_request_interval_seconds=minimum_request_interval_seconds,
     )
 
 
@@ -57,15 +109,233 @@ def test_collection_result_rejects_accepted_records_above_received() -> None:
 def test_registry_is_fixed_and_definitions_are_deterministic() -> None:
     registry = get_default_registry()
 
-    assert registry.source_ids() == ("ct_logs", "web_surface")
+    assert registry.source_ids() == (
+        "ct_live",
+        "ct_logs",
+        "web_surface",
+        "website_public",
+    )
     definitions = registry.definitions()
-    assert [item.source_id for item in definitions] == ["ct_logs", "web_surface"]
+    assert [item.source_id for item in definitions] == [
+        "ct_live",
+        "ct_logs",
+        "web_surface",
+        "website_public",
+    ]
     assert all(item.default_enabled is False for item in definitions)
+    assert registry.get("ct_live").definition.integration_kind == "provider_api"
     assert registry.get("ct_logs").definition.source_class == "public_api"
     assert registry.get("web_surface").definition.source_class == "targeted_public_web"
+    assert registry.get("website_public").definition.source_class == "targeted_public_web"
 
     with pytest.raises(KeyError, match="Unknown FII source ID"):
         registry.get("not_registered")
+
+
+def test_ct_live_requires_explicit_approval_before_network_access(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_network(*args, **kwargs):
+        raise AssertionError("network helper must not be called without approval")
+
+    monkeypatch.setattr("fii.sources.http.build_opener", unexpected_network)
+    context = make_context(tmp_path, fixture_path=None)
+
+    result = run_collector(CTLiveCollector(), context)
+
+    assert result.status == "failed"
+    assert result.diagnostics[0].code == "live_collection_not_approved"
+
+
+def test_ct_live_collects_one_page_and_retains_only_in_scope_names(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider_body = json.dumps(
+        {
+            "apex": "example.invalid",
+            "count": 3,
+            "total": 3,
+            "total_capped": False,
+            "names": [
+                {"name": "example.invalid", "first_seen": "2026-01-01"},
+                {"name": "api.example.invalid", "first_seen": "2026-02-03"},
+                {"name": "outside.invalid", "first_seen": "2026-03-04"},
+            ],
+            "has_more": False,
+        }
+    ).encode("utf-8")
+    opener = FakeHTTPOpener(
+        [
+            FakeHTTPResponse(
+                provider_body,
+                content_type="application/json",
+                final_url=(
+                    "https://crt.live/api/v1/domain/example.invalid"
+                    "?sort=recent&limit=1000"
+                ),
+            )
+        ]
+    )
+    monkeypatch.setattr("fii.sources.http.build_opener", lambda *args: opener)
+    context = make_context(
+        tmp_path,
+        fixture_path=None,
+        live_collection_approved=True,
+    )
+
+    result = run_collector(CTLiveCollector(), context)
+
+    assert result.status == "success"
+    assert result.records_received == 3
+    assert result.records_accepted == 2
+    assert len(result.observations) == 2
+    assert {item.observed_value for item in result.observations} == {
+        "example.invalid",
+        "api.example.invalid",
+    }
+    assert all(item.observation_type == "ct_hostname" for item in result.observations)
+    assert all(item.raw_sha256 == result.raw_evidence[0].sha256 for item in result.observations)
+
+    request, timeout = opener.requests[0]
+    assert request.get_method() == "GET"
+    assert request.full_url == (
+        "https://crt.live/api/v1/domain/example.invalid?sort=recent&limit=1000"
+    )
+    assert request.get_header("Authorization") is None
+    assert timeout == 20
+
+    evidence = result.raw_evidence[0]
+    stored = json.loads((context.raw_directory / evidence.relative_path).read_text())
+    assert [item["name"] for item in stored["names"]] == [
+        "example.invalid",
+        "api.example.invalid",
+    ]
+    assert evidence.original_sha256 == hashlib.sha256(provider_body).hexdigest()
+    assert evidence.sha256 != evidence.original_sha256
+
+
+def test_ct_live_rate_limit_is_reported_without_retry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    headers = Message()
+    headers["Retry-After"] = "60"
+    error = HTTPError(
+        "https://crt.live/api/v1/domain/example.invalid",
+        429,
+        "Too Many Requests",
+        headers,
+        None,
+    )
+    opener = FakeHTTPOpener([error])
+    monkeypatch.setattr("fii.sources.http.build_opener", lambda *args: opener)
+    context = make_context(
+        tmp_path,
+        fixture_path=None,
+        live_collection_approved=True,
+    )
+
+    result = run_collector(CTLiveCollector(), context)
+
+    assert result.status == "failed"
+    assert result.diagnostics[0].code == "rate_limited"
+    assert "Retry-After: 60" in result.diagnostics[0].message
+    assert len(opener.requests) == 1
+
+
+def test_public_website_snapshot_fetches_only_approved_html_and_scripts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    html = (
+        '<html><head><script src="/assets/app.js"></script>'
+        '<script src="https://cdn.external.invalid/vendor.js"></script>'
+        '<a href="/api-docs">API</a></head>'
+        '<body><script>const protocol = "OIDC";</script></body></html>'
+    ).encode("utf-8")
+    script = (
+        'fetch("/api/v3/accounts", {method: "POST"});'
+        'const provider = "Plaid"; const flow = "PKCE";'
+    ).encode("utf-8")
+    opener = FakeHTTPOpener(
+        [
+            FakeHTTPResponse(
+                html,
+                content_type="text/html",
+                final_url="https://www.example.invalid/",
+            ),
+            FakeHTTPResponse(
+                script,
+                content_type="application/javascript",
+                final_url="https://www.example.invalid/assets/app.js",
+            ),
+        ]
+    )
+    monkeypatch.setattr("fii.sources.http.build_opener", lambda *args: opener)
+    context = make_context(
+        tmp_path,
+        fixture_path=None,
+        live_collection_approved=True,
+        minimum_request_interval_seconds=0,
+    )
+
+    result = run_collector(PublicWebsiteSnapshotCollector(), context)
+
+    assert result.status == "success"
+    assert result.records_received == 2
+    assert result.records_accepted == 2
+    assert len(opener.requests) == 2
+    assert all(request.get_method() == "GET" for request, _ in opener.requests)
+    assert all(request.get_header("Authorization") is None for request, _ in opener.requests)
+    assert all(request.get_header("Cookie") is None for request, _ in opener.requests)
+
+    endpoints = [
+        item for item in result.observations
+        if item.observation_type == "api_endpoint"
+    ]
+    assert ("POST", "/api/v3/accounts") in {
+        (item.attributes["method"], item.attributes["path"]) for item in endpoints
+    }
+    auth_markers = {
+        item.observed_value
+        for item in result.observations
+        if item.observation_type == "auth_structure"
+    }
+    assert {"openid_connect", "pkce"} <= auth_markers
+    integrations = {
+        item.observed_value
+        for item in result.observations
+        if item.observation_type == "integration_reference"
+    }
+    assert "Plaid" in integrations
+
+    assets = [
+        item for item in result.observations
+        if item.observation_type == "javascript_asset"
+    ]
+    assert any(item.attributes["fetched"] is True for item in assets)
+    assert any(
+        item.attributes.get("skip_reason") == "outside_approved_https_scope"
+        for item in assets
+    )
+
+
+def test_public_website_snapshot_requires_manual_approval(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_network(*args, **kwargs):
+        raise AssertionError("network helper must not be called without approval")
+
+    monkeypatch.setattr("fii.sources.http.build_opener", unexpected_network)
+    context = make_context(tmp_path, fixture_path=None)
+
+    result = run_collector(PublicWebsiteSnapshotCollector(), context)
+
+    assert result.status == "failed"
+    assert result.diagnostics[0].code == "live_collection_not_approved"
 
 
 def test_registry_rejects_duplicate_source_ids() -> None:
