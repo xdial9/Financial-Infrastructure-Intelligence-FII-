@@ -398,7 +398,9 @@ def test_transaction_rolls_back_application_exception(tmp_path: Path) -> None:
                     INSERT INTO engagement (
                         engagement_id, slug, display_name, config_path, scope_json,
                         created_at, updated_at, status
-                    ) VALUES (?, 'rollback-fixture', 'Rollback', 'config.yaml', '{}', ?, ?, 'active')
+                    ) VALUES (
+                        ?, 'rollback-fixture', 'Rollback', 'config.yaml', '{}', ?, ?, 'active'
+                    )
                     """,
                     (_id(), "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"),
                 )
