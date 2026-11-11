@@ -46,15 +46,22 @@ Evaluate regulator-maintained institution directories, filings and public datase
 Use public customer stories, partner directories, product documentation, status pages and integration guides to identify documented technology dependencies. A marketing logo is weak evidence; a technical integration document or formal filing is stronger evidence.
 
 ### S-013 — Public website API, JavaScript and authentication surface
-**Priority:** P0 for approved public pages; static-fixture adapter implemented in Block 06.
+**Priority:** P0 for approved public pages; fixture analyzer and manually approved read-only snapshot adapter implemented in Block 06.
 
-Collect or analyze publicly accessible HTML and browser-delivered JavaScript associated with explicitly approved domains. Catalog:
+After operator review of source terms, robots policy, licensing and request limits, retrieve one explicitly approved HTTPS landing page and a bounded number of JavaScript assets whose hosts remain within the approved domain/subdomain scope. Requests are anonymous GETs, redirects are refused, query-bearing landing URLs are rejected, and no login or state-changing method is used. Static fixture analysis remains available for offline testing. Catalog:
 - Script and preload asset references, integrity metadata and source-map references.
 - Statically identifiable API routes, absolute API URLs, HTTP methods where explicit, and API documentation references such as OpenAPI, Swagger, Redoc and API-docs paths.
 - Authentication architecture hints such as OAuth/OIDC, SAML, PKCE, authorization/token/userinfo/JWKS routes, session routes and named identity-provider SDKs.
 - Third-party provider references such as Plaid, Stripe, MX, Finicity, Yodlee, Akoya, TrueLayer and others.
 
-An API string in JavaScript is not proof that an endpoint is reachable, that a route is intended for public use, or that a service is usable. An auth marker is not proof of a working login. A vendor string is not proof of an active institutional integration. Preserve the source file/hash and label the detection as static evidence. Never execute JavaScript, submit credentials, replay sessions or collect customer/account data. The first Block 06 implementation consumes local fixtures; a live public-page adapter requires an explicit source/terms/robots/rate review and manual invocation.
+An API string in JavaScript is not proof that an endpoint is reachable, that a route is intended for public use, or that a service is usable. An auth marker is not proof of a working login. A vendor string is not proof of an active institutional integration. Preserve the source file/hash and label the detection as static evidence. Never execute JavaScript, submit credentials, replay sessions or collect customer/account data. The Block 06 live adapter requires `live_collection_approved=True` for each run. It does not execute JavaScript, call discovered API routes, follow source maps, fetch unapproved CDN hosts, or validate sessions.
+
+### S-014 — crt.live public Certificate Transparency API
+**Priority:** P0 for manually approved single-domain CT enrichment; one-page adapter implemented in Block 06.
+
+Use the public JSON API for one explicitly approved seed domain per invocation. The adapter requests one page (default 1,000 names, maximum 10,000), retains only exact/subdomain matches of the approved domain, and records hostname plus first-seen date. It preserves the provider-response digest and a retained, in-scope evidence payload. It does not paginate automatically or retry HTTP 429; it surfaces `Retry-After` and marks capped/incomplete result pages as partial.
+
+The provider documentation describes a maximum page limit of 10,000 and a limit of 120 requests per minute per address, and cautions that CT names do not prove a host exists or resolves. FII deliberately issues one request per manual invocation. The response does not provide the full certificate issuer/serial/validity/key metadata set. Before invocation, an operator must review the provider's current terms and rate guidance. Reference: [crt.live API documentation](https://crt.live/about).
 
 ## 3. Optional infrastructure intelligence sources
 
