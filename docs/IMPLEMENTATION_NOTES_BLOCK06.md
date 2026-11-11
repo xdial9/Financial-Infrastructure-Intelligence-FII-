@@ -3,7 +3,9 @@
 **Branch:** `build/block-06-collector-contract-passive-sources`  
 **Base branch:** `build/block-05-sqlite-evidence-store`  
 **Base commit:** `f2d1b6ed1f40c91f978b9cb1121967100295b206`  
-**Status:** Implementation submitted as a stacked draft pull request; final GitHub CI verification is pending.
+**Status:** Implementation submitted as stacked draft [PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3); final CI verification is pending for current head.
+
+**Current implementation head before this note update:** `311d11c7519b55434a188770598b012d698f92a2`.
 
 ## Scope implemented
 
@@ -60,4 +62,7 @@ All fixture domains, issuers, IDs and provider page content are synthetic. Tests
 
 ## Verification
 
-GitHub Actions is the verification source for this branch. The final PR head and completed Python 3.11/3.12/3.13 plus Ruff results will be recorded in the completion report after GitHub reports them. No local test result is claimed; no local repository checkout or user system was used for this work.
+- GitHub Actions run [#14](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43120447008) tested code head `a5f9bc21862ad919c2e72ae03e1f34cb25fc44c3`. All three Python matrix jobs reported **61 tests passed**.
+- Ruff reported one `B904` finding in the concurrent evidence-write error path. It was corrected by commit `311d11c7519b55434a188770598b012d698f92a2` with explicit exception chaining.
+- Run #14 did not test commit `311d11c`; a successful run against the latest PR head is still required.
+- No local test result is claimed; GitHub Actions is the verification source. No local repository checkout or user system was used for this work.
