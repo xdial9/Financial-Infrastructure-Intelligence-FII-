@@ -4,7 +4,7 @@
 **Base branch:** `build/block-05-sqlite-evidence-store`  
 **Base commit:** `f2d1b6ed1f40c91f978b9cb1121967100295b206`  
 **Pull request:** [Draft PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3)  
-**Verified code head:** `8607e615061278d3c1b3ac31922ff9af85393bf6`
+**Verified code head:** `b1243f61f967b0c2bbc03134509108ba6179caa4`
 
 ## Implemented scope
 
@@ -50,7 +50,7 @@ Added synthetic fixtures under `tests/fixtures/sources/` and tests in `tests/tes
 - Likely credential-value redaction before retaining website text.
 - Explicit live-collection approval gates.
 - Mocked crt.live request behavior, exact one-domain query, scope filtering, evidence digests and rate-limit handling without retries.
-- Mocked website snapshot behavior, same-scope asset retrieval, external CDN skip, anonymous GET headers and static analysis of fetched script text.
+- Mocked website snapshot behavior, same-scope asset retrieval, external CDN skip, anonymous GET headers, static analysis of fetched script text and an asset-request cap that includes failed requests.
 - Fatal raw-evidence persistence errors, structured source-failure logging and JSON result serialization.
 
 All fixtures and mocked responses are synthetic. CI made no network requests.
@@ -65,10 +65,10 @@ No live CT query, public page retrieval or financial-institution request was mad
 
 ## Verification
 
-GitHub Actions [run #31](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121459495) completed successfully on code head `8607e615061278d3c1b3ac31922ff9af85393bf6`:
-- Python 3.11: 67 passed; Ruff all checks passed.
-- Python 3.12: 67 passed; Ruff all checks passed.
-- Python 3.13: 67 passed; Ruff all checks passed.
+GitHub Actions [run #37](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121856605) completed successfully on code head `b1243f61f967b0c2bbc03134509108ba6179caa4`:
+- Python 3.11: 68 passed; Ruff all checks passed.
+- Python 3.12: 68 passed; Ruff all checks passed.
+- Python 3.13: 68 passed; Ruff all checks passed.
 
 No local test result is claimed; GitHub Actions is the verification source. Documentation-only changes made after the verified code head are checked by the PR's subsequent CI run.
 
