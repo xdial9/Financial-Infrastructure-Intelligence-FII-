@@ -72,9 +72,9 @@ Exit criteria:
 
 ## Block 04 — Run controller, manifests, locking and recovery
 
-**Status:** In progress on `build/block-04-run-controller`; implementation and tests are staged for CI verification.
+**Status:** Core run-control primitives CI-verified on draft PR #1; broader CLI integration and reconciliation remain deferred.
 
-Implemented so far:
+Implemented on `build/block-04-run-controller`:
 - UUID run directory creation with private file/directory permissions.
 - Immutable run manifest and effective configuration snapshot with common credential fields redacted.
 - SHA-256 configuration/scope digests and deterministic stage fingerprints.
@@ -82,39 +82,39 @@ Implemented so far:
 - Explicit interrupted-stage recovery; an interrupted attempt is never treated as successful.
 - Exclusive, token-owned workspace lock that does not automatically steal stale locks.
 
-Still required before this block is complete:
-- CLI/run-controller integration and end-to-end interruption/resume exercise.
-- Reconciliation behavior for stale locks and incomplete run artifacts.
-- Successful local and CI test verification.
+Verification:
+- GitHub Actions run #8 completed successfully for PR head `8afc42e9fe1a15935d4c50fb4deb87dca955c493`.
+- Python 3.11, 3.12 and 3.13 matrix jobs passed; each job reported 38 tests passed and Ruff reported all checks passed.
+- The pull-request workflow checked the merge ref containing that head commit. See [run #8](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/42917841718).
 
-Deliverables:
-- Run UUID and immutable effective config snapshot.
-- Stage/source attempt history.
-- Workspace interprocess lock.
-- Atomic state writes.
-- Resume fingerprints.
-- Ctrl+C and timeout behavior.
-- Reconciliation command.
+Remaining work, not claimed complete:
+- User-facing CLI/run-controller integration.
+- End-to-end interruption/resume exercise through a pipeline command.
+- Reconciliation behavior for incomplete run artifacts and stale locks.
+- Ctrl+C and timeout orchestration.
 
-Exit criteria:
-- A synthetic pipeline can be interrupted and resumed.
-- Completed stages are skipped only when fingerprints match.
-- Existing outputs are not overwritten.
-- Stale running state is detected.
+The next block proceeds after the user-directed CI gate; this does not imply the deferred integration items are implemented.
 
 ## Block 05 — SQLite evidence store
 
+**Status:** Implementation submitted for CI verification on `build/block-05-sqlite-evidence-store`, stacked on the verified Block 04 head.
+
 Deliverables:
-- Numbered schema migrations.
-- Engagement, run, stage, source execution, observation and entity tables.
-- Relationship and finding tables.
-- Database integrity and backup utilities.
+- Numbered, checksummed SQL schema migrations and schema-version tracking.
+- Engagement, run, stage-attempt, source-definition/execution, observation, provenance-link, entity, relationship, relationship-evidence, finding and finding-evidence tables.
+- Standard-library SQLite connection and transaction helpers with foreign keys enabled for every opened connection.
+- Constraints and indexes for deduplication, source provenance, relationship evidence and finding evidence.
+- Integrity checks and atomic, no-overwrite database backups.
+- Fatal persistence exceptions; no persistence failure is silently treated as success.
+- Offline synthetic tests for database creation, migrations, foreign keys, uniqueness, evidence constraints, rollback, backup/restore and persistence failures.
 
 Exit criteria:
-- Schema creates from empty workspace.
-- Migrations are idempotent/safely versioned.
-- Foreign keys and key constraints are tested.
-- Persistence failure halts the run.
+- Empty database initializes with the latest numbered schema.
+- Reapplying migrations is idempotent and a newer schema is never downgraded.
+- Foreign keys, uniqueness and evidence constraints reject invalid records.
+- Transaction failures roll back and surface as persistence errors.
+- A verified backup can be restored without overwriting an existing backup.
+- Latest GitHub CI is green before this block is marked complete.
 
 ## Block 06 — Collector contract and first passive data source
 
