@@ -322,6 +322,60 @@ def test_public_website_snapshot_fetches_only_approved_html_and_scripts(
     )
 
 
+def test_public_website_snapshot_caps_failed_asset_fetch_attempts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    html = (
+        b'<html><script src="/assets/one.js"></script>'
+        b'<script src="/assets/two.js"></script></html>'
+    )
+    not_found = HTTPError(
+        "https://www.example.invalid/assets/one.js",
+        404,
+        "Not Found",
+        Message(),
+        None,
+    )
+    opener = FakeHTTPOpener(
+        [
+            FakeHTTPResponse(
+                html,
+                content_type="text/html",
+                final_url="https://www.example.invalid/",
+            ),
+            not_found,
+        ]
+    )
+    monkeypatch.setattr("fii.sources.http.build_opener", lambda *args: opener)
+    context = make_context(
+        tmp_path,
+        fixture_path=None,
+        live_collection_approved=True,
+        minimum_request_interval_seconds=0,
+    )
+    context = CollectionContext(
+        run_id=context.run_id,
+        raw_directory=context.raw_directory,
+        approved_domains=context.approved_domains,
+        source_url=context.source_url,
+        live_collection_approved=True,
+        max_linked_assets=1,
+        minimum_request_interval_seconds=0,
+    )
+
+    result = run_collector(PublicWebsiteSnapshotCollector(), context)
+
+    assert result.status == "partial"
+    assert len(opener.requests) == 2
+    skipped = [
+        item for item in result.observations
+        if item.observation_type == "javascript_asset"
+        and item.attributes.get("skip_reason") == "asset_limit_reached"
+    ]
+    assert len(skipped) == 1
+
+
 def test_public_website_snapshot_requires_manual_approval(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
