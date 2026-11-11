@@ -196,10 +196,17 @@ class CollectionResult:
 class SourceCollectionError(RuntimeError):
     """Expected source/input failure that should become a failed result."""
 
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        raw_evidence: tuple[RawEvidenceReference, ...] = (),
+    ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
+        self.raw_evidence = raw_evidence
 
 
 class EvidenceWriteError(RuntimeError):
@@ -237,6 +244,7 @@ def run_collector(
             status="failed",
             started_at=started_at,
             finished_at=finished_at,
+            raw_evidence=exc.raw_evidence,
             diagnostics=(SourceDiagnostic(exc.code, exc.message, "error"),),
         )
     else:
