@@ -7,8 +7,12 @@ can implement the same contract in later blocks without dynamic code loading.
 from __future__ import annotations
 
 from fii.sources.contracts import Collector, SourceDefinition
+from fii.sources.ct_live import CTLiveCollector
 from fii.sources.ct_logs import CTLogsFixtureCollector
-from fii.sources.web_surface import WebSurfaceFixtureCollector
+from fii.sources.web_surface import (
+    PublicWebsiteSnapshotCollector,
+    WebSurfaceFixtureCollector,
+)
 
 
 class SourceRegistry:
@@ -43,5 +47,16 @@ class SourceRegistry:
 
 
 def get_default_registry() -> SourceRegistry:
-    """Build the fixed first-release registry without network or tool side effects."""
-    return SourceRegistry((CTLogsFixtureCollector(), WebSurfaceFixtureCollector()))
+    """Build the fixed registry without network or tool side effects.
+
+    Live collectors are registered but remain opt-in: their context must carry
+    live_collection_approved=True for any HTTPS request to be attempted.
+    """
+    return SourceRegistry(
+        (
+            CTLiveCollector(),
+            CTLogsFixtureCollector(),
+            PublicWebsiteSnapshotCollector(),
+            WebSurfaceFixtureCollector(),
+        )
+    )
