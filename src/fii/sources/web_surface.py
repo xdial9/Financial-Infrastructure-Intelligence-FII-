@@ -9,7 +9,6 @@ from __future__ import annotations
 import re
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fii.sources.contracts import (
@@ -508,10 +507,11 @@ def _safe_reference(value: str) -> str | None:
             safe_query.append((key, "[REDACTED]"))
         else:
             safe_query.append((key, query_value))
+    safe_netloc = parts.netloc.rsplit("@", 1)[-1]
     return urlunsplit(
         (
             parts.scheme.lower(),
-            parts.netloc,
+            safe_netloc,
             parts.path,
             urlencode(safe_query),
             "",
