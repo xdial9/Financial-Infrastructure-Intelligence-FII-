@@ -140,3 +140,24 @@ The final run summary must include run ID, engagement, timestamps, status, sourc
 - no stage marked successful is missing its output manifest.
 
 The reconciler reports inconsistencies; it never silently rewrites evidence or changes an error into success.
+
+## 11. Collector interface and evidence semantics
+
+A collector is a fixed, versioned adapter implementing one operation:
+
+```python
+definition: SourceDefinition
+collect(context: CollectionContext) -> CollectionResult
+```
+
+The context carries the run ID, approved seed domains, optional fixture location, raw-evidence directory, source URL and bounded input-size settings. The result carries source status, timestamps, received/accepted counters, immutable raw-evidence references, typed observations and sanitized diagnostics.
+
+Collector rules:
+- Sources run sequentially. A collector cannot start another collector or a later pipeline stage.
+- Every observation references a raw-evidence SHA-256 and records its source URL, collection time and detection metadata.
+- Collectors report observed facts. Static API routes, authentication markers and provider references must not be promoted into verified relationships by the collector.
+- The fixed registry is explicit. Future provider APIs and external-tool adapters implement the same contract; arbitrary runtime plugin loading is not part of the MVP.
+- Website HTML/JavaScript analysis is static text analysis. The fixture adapter does not execute scripts or fetch script/source-map references.
+- Likely credential values are redacted from saved web text. The retained evidence SHA-256 and original input digest are both recorded; no secret value belongs in an observation, log or database row.
+- Source parsing/unavailability errors produce failed or partial source results. Failure to write or safely reference raw evidence is a fatal persistence error and must propagate to the run controller.
+- Raw evidence paths are private, content-addressed, relative to the run's raw directory and never overwrite an existing file.
