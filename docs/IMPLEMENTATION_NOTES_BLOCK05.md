@@ -3,7 +3,7 @@
 **Branch:** `build/block-05-sqlite-evidence-store`  
 **Base branch:** `build/block-04-run-controller`  
 **Base commit:** `8afc42e9fe1a15935d4c50fb4deb87dca955c493`  
-**Status:** Implementation submitted for GitHub CI verification.
+**Status:** CI-verified on draft [PR #2](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/2).
 
 ## Scope implemented
 
@@ -21,4 +21,10 @@ This block does not add source collectors, network calls, live lookups, normaliz
 
 ## Verification
 
-GitHub Actions verification is pending for this branch. No local test result is claimed: this execution environment could not resolve GitHub for a local checkout, so the connected repository and its CI workflow are the verification source. The exact PR, implementation commit, CI run and test totals will be added after GitHub reports them.
+- Verified PR head: `f2d1b6ed1f40c91f978b9cb1121967100295b206`.
+- GitHub Actions run [#10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982) completed successfully for that PR head.
+- Python 3.11: 48 passed; Ruff: all checks passed.
+- Python 3.12: 48 passed; Ruff: all checks passed.
+- Python 3.13: 48 passed; Ruff: all checks passed.
+- No local test result is claimed; GitHub CI is the verification source.
+
