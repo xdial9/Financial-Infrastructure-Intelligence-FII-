@@ -91,7 +91,7 @@ class CollectionContext:
             or not 0 <= self.minimum_request_interval_seconds <= 60
         ):
             raise ValueError("minimum_request_interval_seconds must be between 0 and 60.")
-        if not self.user_agent.strip() or "\\n" in self.user_agent or "\\r" in self.user_agent:
+        if not self.user_agent.strip() or "\n" in self.user_agent or "\r" in self.user_agent:
             raise ValueError("A single-line non-empty user agent is required.")
         if not isinstance(self.live_collection_approved, bool):
             raise ValueError("live_collection_approved must be true or false.")
