@@ -45,6 +45,17 @@ Evaluate regulator-maintained institution directories, filings and public datase
 **Priority:** P1  
 Use public customer stories, partner directories, product documentation, status pages and integration guides to identify documented technology dependencies. A marketing logo is weak evidence; a technical integration document or formal filing is stronger evidence.
 
+### S-013 — Public website API, JavaScript and authentication surface
+**Priority:** P0 for approved public pages; static-fixture adapter implemented in Block 06.
+
+Collect or analyze publicly accessible HTML and browser-delivered JavaScript associated with explicitly approved domains. Catalog:
+- Script and preload asset references, integrity metadata and source-map references.
+- Statically identifiable API routes, absolute API URLs, HTTP methods where explicit, and API documentation references such as OpenAPI, Swagger, Redoc and API-docs paths.
+- Authentication architecture hints such as OAuth/OIDC, SAML, PKCE, authorization/token/userinfo/JWKS routes, session routes and named identity-provider SDKs.
+- Third-party provider references such as Plaid, Stripe, MX, Finicity, Yodlee, Akoya, TrueLayer and others.
+
+An API string in JavaScript is not proof that an endpoint is reachable, that a route is intended for public use, or that a service is usable. An auth marker is not proof of a working login. A vendor string is not proof of an active institutional integration. Preserve the source file/hash and label the detection as static evidence. Never execute JavaScript, submit credentials, replay sessions or collect customer/account data. The first Block 06 implementation consumes local fixtures; a live public-page adapter requires an explicit source/terms/robots/rate review and manual invocation.
+
 ## 3. Optional infrastructure intelligence sources
 
 ### S-007 — Passive DNS provider
