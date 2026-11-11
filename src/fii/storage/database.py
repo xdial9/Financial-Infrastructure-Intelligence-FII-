@@ -9,10 +9,10 @@ import sqlite3
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib import resources
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 class PersistenceError(RuntimeError):
@@ -167,7 +167,7 @@ def _sql_statements(script: str) -> Iterator[str]:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def migrate_database(connection: sqlite3.Connection) -> int:
