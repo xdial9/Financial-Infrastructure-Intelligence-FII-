@@ -16,6 +16,7 @@ from fii.core.scope import normalize_domain
 from fii.sources.http import fetch_public_resource
 from fii.sources.contracts import (
     CollectionContext,
+    EvidenceWriteError,
     CollectionResult,
     Observation,
     SourceCollectionError,
