@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06 adds the fixed collector contract, synthetic CT fixtures and static website HTML/JavaScript surface analysis on a stacked review branch. A complete source-to-report pipeline is not available yet.
+**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06's fixture and manual public-source collectors passed run #31 on draft PR #3: 67 tests and Ruff clean on Python 3.11, 3.12 and 3.13. Block 06 includes CT hostname collection from crt.live and approved one-page HTML/JavaScript snapshots; no live query was executed during development or CI. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
