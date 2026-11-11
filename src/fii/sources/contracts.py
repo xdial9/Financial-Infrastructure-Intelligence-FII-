@@ -144,6 +144,11 @@ class CollectionResult:
     def __post_init__(self) -> None:
         if self.records_received < 0 or self.records_accepted < 0:
             raise ValueError("Collection counters cannot be negative.")
+        if self.records_accepted > self.records_received and self.records_received:
+            # One CT record can produce several hostname observations. The
+            # record counters therefore describe source records, not observations.
+            return
+
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable result without raw payload contents."""
         return {
@@ -191,17 +196,10 @@ class CollectionResult:
 class SourceCollectionError(RuntimeError):
     """Expected source/input failure that should become a failed result."""
 
-    def __init__(
-        self,
-        code: str,
-        message: str,
-        *,
-        raw_evidence: tuple[RawEvidenceReference, ...] = (),
-    ) -> None:
+    def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
-        self.raw_evidence = raw_evidence
 
 
 class EvidenceWriteError(RuntimeError):
@@ -239,7 +237,6 @@ def run_collector(
             status="failed",
             started_at=started_at,
             finished_at=finished_at,
-            raw_evidence=exc.raw_evidence,
             diagnostics=(SourceDiagnostic(exc.code, exc.message, "error"),),
         )
     else:

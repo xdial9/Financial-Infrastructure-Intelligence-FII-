@@ -45,21 +45,6 @@ class CTLogsFixtureCollector:
                 "CT collection requires a local JSON fixture path.",
             )
 
-        try:
-            approved_domains = {
-                normalize_domain(domain) for domain in context.approved_domains
-            }
-        except ValueError as exc:
-            raise SourceCollectionError(
-                "invalid_scope",
-                "CT collection received a malformed approved seed domain.",
-            ) from exc
-        if not approved_domains:
-            raise SourceCollectionError(
-                "empty_scope",
-                "CT collection requires at least one approved seed domain.",
-            )
-
         fixture = Path(context.fixture_path)
         if fixture.is_symlink() or not fixture.is_file():
             raise SourceCollectionError(
@@ -92,7 +77,6 @@ class CTLogsFixtureCollector:
             raise SourceCollectionError(
                 "invalid_ct_fixture",
                 "The CT fixture is not valid UTF-8 JSON; its raw bytes were preserved.",
-                raw_evidence=(evidence,),
             ) from exc
 
         if isinstance(payload, list):
@@ -105,7 +89,15 @@ class CTLogsFixtureCollector:
             raise SourceCollectionError(
                 "invalid_ct_fixture_shape",
                 "The CT fixture must be a JSON array or an object containing a records array.",
-                raw_evidence=(evidence,),
+            )
+
+        approved_domains = {
+            normalize_domain(domain) for domain in context.approved_domains
+        }
+        if not approved_domains:
+            raise SourceCollectionError(
+                "empty_scope",
+                "CT collection requires at least one approved seed domain.",
             )
 
         collected_at = context.collected_at or utc_now()

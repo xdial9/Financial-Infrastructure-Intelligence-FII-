@@ -212,7 +212,6 @@ class WebSurfaceFixtureCollector:
                 raise SourceCollectionError(
                     "fixture_too_large",
                     "Website-surface fixtures exceed the configured total size limit.",
-                    raw_evidence=tuple(raw_evidence),
                 )
 
             evidence = write_raw_evidence(

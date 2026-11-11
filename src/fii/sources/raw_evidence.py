@@ -81,21 +81,13 @@ def write_raw_evidence(
     descriptor = -1
     temporary_path: Path | None = None
     try:
-        root_existed = root.exists()
         root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        if not root.is_dir():
-            raise EvidenceWriteError("Raw evidence root is not a directory.")
-        if not root_existed:
-            os.chmod(root, 0o700)
+        os.chmod(root, 0o700)
         source_directory = root / source_id
         if source_directory.is_symlink():
             raise EvidenceWriteError("Refusing a symlinked source evidence directory.")
-        source_directory_existed = source_directory.exists()
         source_directory.mkdir(mode=0o700, exist_ok=True)
-        if not source_directory.is_dir():
-            raise EvidenceWriteError("Source evidence path is not a directory.")
-        if not source_directory_existed:
-            os.chmod(source_directory, 0o700)
+        os.chmod(source_directory, 0o700)
         resolved_root = root.resolve(strict=True)
         resolved_directory = source_directory.resolve(strict=True)
         resolved_directory.relative_to(resolved_root)
