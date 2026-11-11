@@ -86,7 +86,7 @@ class CTLiveCollector:
 
         names = response["names"]
         collected_at = context.collected_at or utc_now()
-        observations: list[Observation] = []
+        pending_names: list[tuple[str, str | None]] = []
         retained_names: list[dict[str, str | None]] = []
         diagnostics: list[SourceDiagnostic] = []
 
@@ -125,25 +125,7 @@ class CTLiveCollector:
                 continue
 
             retained_names.append({"name": normalized, "first_seen": first_seen})
-            observations.append(
-                Observation(
-                    observation_type="ct_hostname",
-                    observed_value=normalized,
-                    collected_at=collected_at,
-                    source_url=payload.final_url,
-                    raw_sha256="0" * 64,
-                    observed_at=first_seen,
-                    attributes={
-                        "provider": "crt.live",
-                        "apex": response.get("apex"),
-                        "first_seen_precision": "day",
-                        "evidence_semantics": (
-                            "Certificate Transparency hostname observation; "
-                            "not proof the host currently exists or resolves."
-                        ),
-                    },
-                )
-            )
+            pending_names.append((normalized, first_seen))
 
         sanitized_payload = json.dumps(
             {
@@ -177,6 +159,27 @@ class CTLiveCollector:
                 attributes=item.attributes,
             )
             for item in observations
+        ]
+
+        observations = [
+            Observation(
+                observation_type="ct_hostname",
+                observed_value=name,
+                collected_at=collected_at,
+                source_url=payload.final_url,
+                raw_sha256=evidence.sha256,
+                observed_at=first_seen,
+                attributes={
+                    "provider": "crt.live",
+                    "apex": response.get("apex"),
+                    "first_seen_precision": "day",
+                    "evidence_semantics": (
+                        "Certificate Transparency hostname observation; "
+                        "not proof the host currently exists or resolves."
+                    ),
+                },
+            )
+            for name, first_seen in pending_names
         ]
 
         if response.get("has_more") is True or response.get("total_capped") is True:
