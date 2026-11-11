@@ -149,20 +149,6 @@ class CTLiveCollector:
 
         observations = [
             Observation(
-                observation_type=item.observation_type,
-                observed_value=item.observed_value,
-                collected_at=item.collected_at,
-                source_url=item.source_url,
-                raw_sha256=evidence.sha256,
-                verification_state=item.verification_state,
-                observed_at=item.observed_at,
-                attributes=item.attributes,
-            )
-            for item in observations
-        ]
-
-        observations = [
-            Observation(
                 observation_type="ct_hostname",
                 observed_value=name,
                 collected_at=collected_at,
