@@ -208,8 +208,12 @@ A single optional source failure must not erase successful results from other so
 
 Core database corruption, inability to checkpoint, scope validation failure, or invalid configuration is a fatal run error.
 
-## 8. Security boundary
+## 8. Collection boundary and evidence semantics
 
-MVP collection is passive/public-source or uses datasets explicitly supplied by an authorized customer. Do not probe, authenticate to, exploit, or alter bank systems. Public reachability is not permission to test. Do not collect credentials, session tokens, payment data or customer records.
+FII gathers intelligence from public-source records, documented provider APIs, approved public website pages and explicitly supplied datasets. Read-only retrieval of public material and static analysis of saved HTML/JavaScript are collection methods, not attacks. Public-page retrieval must still respect the source's terms, robots policy, rate limits and the engagement's approved domain/source scope.
 
-Any future active validation is a separate capability and engagement gate, not an implicit mode of the collector pipeline.
+The collector pipeline does not log in, submit forms, change account or platform state, replay sessions, exploit vulnerabilities or perform service/vulnerability testing. It does not collect credentials, session tokens, payment data or customer records. Likely credential values accidentally present in public web text are redacted before retained evidence is written.
+
+API routes, auth architecture markers and vendor names are observations with provenance—not proof of endpoint functionality, login success, account validation or an active commercial relationship. Relationship correlation must preserve observed, documented, inferred and corroborated states separately.
+
+Provider APIs and external tools are optional adapters behind the fixed collector contract. Their terms, data licensing, rate limits, credential requirements, coverage and overlap must be reviewed before implementation or invocation.
