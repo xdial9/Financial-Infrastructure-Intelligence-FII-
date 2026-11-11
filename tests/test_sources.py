@@ -18,6 +18,7 @@ from fii.sources import (
     get_default_registry,
     run_collector,
 )
+from fii.sources.contracts import CollectionResult
 from fii.sources.ct_logs import CTLogsFixtureCollector
 from fii.sources.web_surface import WebSurfaceFixtureCollector
 
@@ -39,6 +40,18 @@ def make_context(
         approved_domains=approved_domains,
         source_url="https://www.example.invalid/",
     )
+
+
+def test_collection_result_rejects_accepted_records_above_received() -> None:
+    with pytest.raises(ValueError, match="Accepted source records cannot exceed"):
+        CollectionResult(
+            source_id="ct_logs",
+            status="success",
+            started_at="2026-01-01T00:00:00Z",
+            finished_at="2026-01-01T00:00:01Z",
+            records_received=1,
+            records_accepted=2,
+        )
 
 
 def test_registry_is_fixed_and_definitions_are_deterministic() -> None:
