@@ -115,11 +115,11 @@ def write_raw_evidence(
                 os.fsync(handle.fileno())
             try:
                 os.link(temporary_path, destination)
-            except FileExistsError:
+            except FileExistsError as exc:
                 if destination.is_symlink() or destination.read_bytes() != raw_bytes:
                     raise EvidenceWriteError(
                         "Concurrent evidence write produced an unexpected destination."
-                    )
+                    ) from exc
             temporary_path.unlink()
             temporary_path = None
 
