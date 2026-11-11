@@ -84,15 +84,18 @@ CI-verified on `build/block-05-sqlite-evidence-store` / draft PR #2:
 - Foreign-key enforcement on every application-created connection and persistence errors that fail closed.
 - 48 synthetic offline tests passed on Python 3.11, 3.12 and 3.13; Ruff passed in all jobs ([run #10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982)).
 
-In review on `build/block-06-collector-contract-passive-sources` / draft PR #3:
-- Stable collector contracts and explicit source registry.
-- Fixture-backed CT observations restricted to approved domains.
-- Static HTML/JavaScript analysis for API paths/method hints, JS asset/source-map references, API docs, authentication architecture markers and provider references.
-- Private content-addressed raw evidence with likely credential values redacted, and structured source failure reporting.
+CI-verified in draft PR #3 on `build/block-06-collector-contract-passive-sources`:
+- Stable collector contracts and explicit registry entries for fixture sources, crt.live and manual public-website snapshots; every source is disabled by default.
+- Synthetic CT fixture adapter plus one-page crt.live public API collection for one approved domain; retained raw JSON is filtered to that domain with original-response and retained-evidence SHA-256 values.
+- Static HTML/JavaScript analysis for API paths/method hints, JavaScript assets/source maps, API documentation, OAuth/OIDC/SAML/PKCE/auth-provider markers and provider references.
+- Manual public website snapshot adapter: one HTTPS HTML page plus a bounded number of same-scope JavaScript assets, using anonymous GET requests only. Redirects are refused; JavaScript is never executed; API routes are catalogued but never requested.
+- Private content-addressed evidence, likely credential-value redaction, source diagnostics and fatal evidence-write failures.
+- GitHub Actions run #31 passed 67 tests and Ruff on Python 3.11, 3.12 and 3.13.
 
 Not implemented yet:
-- A user-facing `fii run` / `fii resume` orchestration command.
-- Live website fetching or live provider queries; these require a source-specific terms/limits review and explicit manual invocation.
-- Provider API and external-tool adapters, normalization, deduplication/correlation pipelines and report generation.
+- A user-facing `fii run`, `fii resume` or `fii collect` orchestration command.
+- Automatic robots/terms analysis; an operator must review source terms, robots policy and limits before setting the per-run live-collection approval flag.
+- RDAP, official corporate/regulatory enrichment, additional provider APIs or external-tool integrations.
+- Dynamic JavaScript execution, login/authentication, session replay, endpoint validation, account actions, normalization/correlation pipelines and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
