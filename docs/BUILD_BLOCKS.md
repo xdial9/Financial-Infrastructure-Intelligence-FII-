@@ -97,7 +97,14 @@ The next block proceeds after the user-directed CI gate; this does not imply the
 
 ## Block 05 — SQLite evidence store
 
-**Status:** Implementation submitted for CI verification on `build/block-05-sqlite-evidence-store`, stacked on the verified Block 04 head.
+**Status:** CI-verified on draft PR #2 / `build/block-05-sqlite-evidence-store`, stacked on the verified Block 04 head.
+
+Verification:
+- Latest verified Block 05 head: `f2d1b6ed1f40c91f978b9cb1121967100295b206`.
+- GitHub Actions run #10 passed for Python 3.11, 3.12 and 3.13.
+- Each matrix job reported 48 passing tests and `ruff check .` reported `All checks passed!`.
+- See [PR #2](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/2) and [run #10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982).
+- No local test result is claimed; CI is the verification source.
 
 Deliverables:
 - Numbered, checksummed SQL schema migrations and schema-version tracking.
@@ -116,19 +123,32 @@ Exit criteria:
 - A verified backup can be restored without overwriting an existing backup.
 - Latest GitHub CI is green before this block is marked complete.
 
-## Block 06 — Collector contract and first passive data source
+## Block 06 — Collector contract and first passive data sources
+
+**Status:** Implementation on `build/block-06-collector-contract-passive-sources`; verification is pending in stacked draft PR #3.
 
 Deliverables:
-- SourceDefinition and CollectionResult contracts.
-- Fixed source registry.
-- Fixture-backed CT source adapter.
-- Raw evidence preservation.
-- Source log and failure reporting.
+- Typed `SourceDefinition`, `CollectionContext`, `Observation`, `CollectionResult` and diagnostic contracts.
+- Explicit fixed registry with stable source IDs and adapter metadata for built-in, provider-API and external-tool integration paths. No dynamic code loading.
+- Fixture-backed Certificate Transparency adapter with explicit approved-domain filtering.
+- Fixture-backed website-surface adapter for saved HTML and JavaScript. It catalogs script assets, static API routes and HTTP methods when identifiable, API-documentation references, source-map references, OAuth/OIDC/SAML/PKCE and identity-provider markers, and third-party integration references such as Plaid and Stripe.
+- Content-addressed, private, no-overwrite raw evidence storage. HTML/JavaScript evidence is sanitized for likely credential values before storage; original and retained hashes are both recorded.
+- Structured source diagnostics and sanitized execution logging. Raw evidence persistence failures remain fatal.
+- Synthetic fixtures only; no institution or provider is contacted. JavaScript is parsed as text and never executed. Asset and source-map URLs are catalogued but not fetched by the fixture adapter.
+
+Interpretation rules:
+- An API route is an observed static reference, not proof that the route is reachable or usable.
+- An auth marker is an architecture hint, not proof of a valid login/session.
+- A provider name is an integration reference, not proof that the institution has an active provider relationship or that a customer account can be validated.
+- Provider API and external-tool adapters can implement the same contract in later blocks; credentials, if ever required, must be handled outside evidence and logs.
 
 Exit criteria:
-- Fixture-based run works offline.
-- One approved live query can be run manually after source terms/limits are checked.
-- Raw response, timestamp, hash and source identity are preserved.
+- Synthetic fixture runs produce deterministic, provenance-linked observations offline.
+- CT names are limited to approved seed domains.
+- API methods, JavaScript assets, auth markers and provider references are recorded with the evidence file/hash and appropriate caveats.
+- Likely credential values are not retained in web-surface evidence.
+- Source failures are reported; evidence-write failures are fatal.
+- A live provider query remains a separate manual step after provider terms, limits and an approved source have been verified; no live request is part of this block's CI.
 
 ## Block 07 — RDAP and official-source enrichment
 
