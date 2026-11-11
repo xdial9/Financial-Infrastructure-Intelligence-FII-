@@ -111,6 +111,7 @@ class CTLogsFixtureCollector:
         collected_at = context.collected_at or utc_now()
         observations: list[Observation] = []
         diagnostics: list[SourceDiagnostic] = []
+        accepted_records = 0
 
         for index, record in enumerate(records):
             if not isinstance(record, dict):
@@ -133,6 +134,7 @@ class CTLogsFixtureCollector:
                 continue
 
             certificate_id = _string_value(record.get("id"))
+            record_observations_before = len(observations)
             for raw_name in names:
                 candidate = raw_name.strip().removeprefix("*.")
                 try:
@@ -170,6 +172,9 @@ class CTLogsFixtureCollector:
                     )
                 )
 
+            if len(observations) > record_observations_before:
+                accepted_records += 1
+
         status = "partial" if diagnostics else "success"
         return CollectionResult(
             source_id=self.definition.source_id,
@@ -177,7 +182,7 @@ class CTLogsFixtureCollector:
             started_at=collected_at,
             finished_at=utc_now(),
             records_received=len(records),
-            records_accepted=len(observations),
+            records_accepted=accepted_records,
             raw_evidence=(evidence,),
             observations=tuple(observations),
             diagnostics=tuple(diagnostics),
