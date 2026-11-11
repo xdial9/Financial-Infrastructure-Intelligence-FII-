@@ -144,10 +144,8 @@ class CollectionResult:
     def __post_init__(self) -> None:
         if self.records_received < 0 or self.records_accepted < 0:
             raise ValueError("Collection counters cannot be negative.")
-        if self.records_accepted > self.records_received and self.records_received:
-            # One CT record can produce several hostname observations. The
-            # record counters therefore describe source records, not observations.
-            return
+        if self.records_accepted > self.records_received:
+            raise ValueError("Accepted source records cannot exceed received records.")
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable result without raw payload contents."""
