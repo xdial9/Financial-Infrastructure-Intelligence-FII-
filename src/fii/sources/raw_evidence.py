@@ -97,7 +97,9 @@ def write_raw_evidence(
             raise EvidenceWriteError("Refusing a symlinked raw evidence file.")
         if destination.exists():
             if destination.read_bytes() != raw_bytes:
-                raise EvidenceWriteError("Content-addressed evidence path contains different bytes.")
+                raise EvidenceWriteError(
+                    "Content-addressed evidence path contains different bytes."
+                )
         else:
             descriptor, temporary_name = tempfile.mkstemp(
                 prefix=".evidence-",
