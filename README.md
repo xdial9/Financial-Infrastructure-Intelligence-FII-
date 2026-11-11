@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06's fixture and manual public-source collectors passed run #31 on draft PR #3: 67 tests and Ruff clean on Python 3.11, 3.12 and 3.13. Block 06 includes CT hostname collection from crt.live and approved one-page HTML/JavaScript snapshots; no live query was executed during development or CI. A complete source-to-report pipeline is not available yet.
+**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06's fixture and manual public-source collectors passed run #37 on draft PR #3: 68 tests and Ruff clean on Python 3.11, 3.12 and 3.13. Block 06 includes CT hostname collection from crt.live and approved one-page HTML/JavaScript snapshots; no live query was executed during development or CI. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
@@ -88,13 +88,13 @@ CI-verified in draft PR #3 on `build/block-06-collector-contract-passive-sources
 - Stable collector contracts and explicit registry entries for fixture sources, crt.live and manual public-website snapshots; every source is disabled by default.
 - Synthetic CT fixture adapter plus one-page crt.live public API collection for one approved domain; retained raw JSON is filtered to that domain with original-response and retained-evidence SHA-256 values.
 - Static HTML/JavaScript analysis for API paths/method hints, JavaScript assets/source maps, API documentation, OAuth/OIDC/SAML/PKCE/auth-provider markers and provider references.
-- Manual public website snapshot adapter: one HTTPS HTML page plus a bounded number of same-scope JavaScript assets, using anonymous GET requests only. Redirects are refused; JavaScript is never executed; API routes are catalogued but never requested.
+- Manual public website snapshot adapter: one HTTPS HTML page plus up to 20 same-scope JavaScript asset request attempts by default, using anonymous GET requests only. Redirects are refused; JavaScript is never executed; API routes are catalogued but never requested.
 - Private content-addressed evidence, likely credential-value redaction, source diagnostics and fatal evidence-write failures.
-- GitHub Actions run #31 passed 67 tests and Ruff on Python 3.11, 3.12 and 3.13.
+- GitHub Actions run #37 passed 68 tests and Ruff on Python 3.11, 3.12 and 3.13.
 
 Not implemented yet:
 - A user-facing `fii run`, `fii resume` or `fii collect` orchestration command.
-- Automatic robots/terms analysis; an operator must review source terms, robots policy and limits before setting the per-run live-collection approval flag.
+- Automatic robots/terms analysis; an operator must review source terms, robots policy and limits before setting the per-run `live_collection_approved=True` flag.
 - RDAP, official corporate/regulatory enrichment, additional provider APIs or external-tool integrations.
 - Dynamic JavaScript execution, login/authentication, session replay, endpoint validation, account actions, normalization/correlation pipelines and report generation.
 
