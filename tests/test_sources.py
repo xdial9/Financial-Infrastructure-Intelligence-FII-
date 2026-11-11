@@ -13,7 +13,6 @@ import pytest
 from fii.sources import (
     CollectionContext,
     EvidenceWriteError,
-    SourceCollectionError,
     SourceDefinition,
     SourceRegistry,
     get_default_registry,
