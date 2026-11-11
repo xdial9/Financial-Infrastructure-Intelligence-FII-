@@ -250,15 +250,15 @@ def test_public_website_snapshot_fetches_only_approved_html_and_scripts(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     html = (
-        '<html><head><script src="/assets/app.js"></script>'
-        '<script src="https://cdn.external.invalid/vendor.js"></script>'
-        '<a href="/api-docs">API</a></head>'
-        '<body><script>const protocol = "OIDC";</script></body></html>'
-    ).encode("utf-8")
+        b'<html><head><script src="/assets/app.js"></script>'
+        b'<script src="https://cdn.external.invalid/vendor.js"></script>'
+        b'<a href="/api-docs">API</a></head>'
+        b'<body><script>const protocol = "OIDC";</script></body></html>'
+    )
     script = (
-        'fetch("/api/v3/accounts", {method: "POST"});'
-        'const provider = "Plaid"; const flow = "PKCE";'
-    ).encode("utf-8")
+        b'fetch("/api/v3/accounts", {method: "POST"});'
+        b'const provider = "Plaid"; const flow = "PKCE";'
+    )
     opener = FakeHTTPOpener(
         [
             FakeHTTPResponse(
