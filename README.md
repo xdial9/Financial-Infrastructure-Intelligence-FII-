@@ -6,7 +6,7 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 
 ## Project status
 
-**Blocks 01–03 are implemented on main.** Block 04 run-control primitives passed GitHub Actions CI on the latest PR #1 head, but full CLI orchestration and reconciliation remain future work. Block 05 adds the SQLite evidence-store foundation on a stacked review branch. A complete source-to-report pipeline is not available yet.
+**Blocks 01–03 are implemented on main.** Block 04 run-control primitives are CI-verified on draft PR #1; full CLI orchestration and reconciliation remain future work. Block 05's SQLite evidence store passed GitHub Actions run #10 on draft PR #2 (48 tests and Ruff clean on Python 3.11, 3.12 and 3.13). Block 06 adds the fixed collector contract, synthetic CT fixtures and static website HTML/JavaScript surface analysis on a stacked review branch. A complete source-to-report pipeline is not available yet.
 
 ## Core documentation
 
@@ -20,11 +20,15 @@ FII is designed as a straightforward, sequential Python workflow: validate an en
 - [Report specification](docs/REPORT_SPECIFICATION.md)
 - [Operations and CLI specification](docs/OPERATIONS.md)
 - [Reference implementation review](docs/REFERENCE_IMPLEMENTATION_REVIEW.md)
+- [Block 05 implementation notes](docs/IMPLEMENTATION_NOTES_BLOCK05.md)
+- [Block 06 implementation notes](docs/IMPLEMENTATION_NOTES_BLOCK06.md)
 
 ## Core design
 
 - Linear, sequential workflow.
-- Passive/public-source collection in the MVP.
+- Evidence collection from public-source records, provider datasets and documented APIs.
+- Static analysis of saved browser-delivered HTML/JavaScript for API, authentication-architecture and integration references.
+- Optional provider-API and external-tool adapter seams without dynamic plugin loading.
 - Explicit engagement scope and source restrictions.
 - Evidence provenance and verification states.
 - Explainable entity and relationship correlation.
@@ -74,15 +78,21 @@ Implemented on `build/block-04-run-controller` and CI-verified in draft PR #1:
 - Atomic state writes, stage fingerprints, attempt history and interrupted-stage recovery.
 - Exclusive engagement workspace lock.
 
-In review on `build/block-05-sqlite-evidence-store`:
+CI-verified on `build/block-05-sqlite-evidence-store` / draft PR #2:
 - Numbered SQLite migrations for engagements, runs, stage attempts, source definitions/executions, observations, provenance links, entities, relationships and findings.
 - Standard-library connection, transaction, integrity-check and no-overwrite backup helpers.
 - Foreign-key enforcement on every application-created connection and persistence errors that fail closed.
-- Synthetic offline tests for migrations, constraints, rollback, backup/restore and persistence failures.
+- 48 synthetic offline tests passed on Python 3.11, 3.12 and 3.13; Ruff passed in all jobs ([run #10](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43119148982)).
+
+In review on `build/block-06-collector-contract-passive-sources` / draft PR #3:
+- Stable collector contracts and explicit source registry.
+- Fixture-backed CT observations restricted to approved domains.
+- Static HTML/JavaScript analysis for API paths/method hints, JS asset/source-map references, API docs, authentication architecture markers and provider references.
+- Private content-addressed raw evidence with likely credential values redacted, and structured source failure reporting.
 
 Not implemented yet:
 - A user-facing `fii run` / `fii resume` orchestration command.
-- Source collectors and preserved raw-evidence pipeline.
-- Normalization, deduplication/correlation pipelines and report generation.
+- Live website fetching or live provider queries; these require a source-specific terms/limits review and explicit manual invocation.
+- Provider API and external-tool adapters, normalization, deduplication/correlation pipelines and report generation.
 
 Work is delivered in bounded blocks. Each block ends with a factual completion report and verified repository changes.
