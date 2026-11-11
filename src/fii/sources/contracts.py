@@ -66,6 +66,12 @@ class CollectionContext:
     source_url: str | None = None
     collected_at: str = field(default_factory=utc_now)
     max_fixture_bytes: int = 5 * 1024 * 1024
+    live_collection_approved: bool = False
+    request_timeout_seconds: int = 20
+    user_agent: str = "FII-Research/0.1"
+    max_response_bytes: int = 2 * 1024 * 1024
+    max_linked_assets: int = 20
+    minimum_request_interval_seconds: float = 1.0
 
     def __post_init__(self) -> None:
         try:
@@ -74,8 +80,21 @@ class CollectionContext:
             raise ValueError("Collection context requires a UUID run_id.") from exc
         if str(parsed) != self.run_id.lower():
             raise ValueError("Collection run_id must use canonical UUID form.")
-        if self.max_fixture_bytes < 1:
-            raise ValueError("max_fixture_bytes must be greater than zero.")
+        if self.max_fixture_bytes < 1 or self.max_response_bytes < 1:
+            raise ValueError("Collection byte limits must be greater than zero.")
+        if not 1 <= self.request_timeout_seconds <= 120:
+            raise ValueError("request_timeout_seconds must be between 1 and 120.")
+        if not 0 <= self.max_linked_assets <= 100:
+            raise ValueError("max_linked_assets must be between 0 and 100.")
+        if (
+            isinstance(self.minimum_request_interval_seconds, bool)
+            or not 0 <= self.minimum_request_interval_seconds <= 60
+        ):
+            raise ValueError("minimum_request_interval_seconds must be between 0 and 60.")
+        if not self.user_agent.strip() or "\\n" in self.user_agent or "\\r" in self.user_agent:
+            raise ValueError("A single-line non-empty user agent is required.")
+        if not isinstance(self.live_collection_approved, bool):
+            raise ValueError("live_collection_approved must be true or false.")
 
 
 @dataclass(frozen=True)
