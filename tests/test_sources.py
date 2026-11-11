@@ -82,7 +82,7 @@ def test_ct_fixture_collects_only_approved_domains_and_preserves_raw(
 
     assert result.status == "success"
     assert result.records_received == 2
-    assert result.records_accepted == 3
+    assert result.records_accepted == 2
     values = [item.observed_value for item in result.observations]
     assert values.count("api.example.invalid") == 2
     assert "login.example.invalid" in values
@@ -153,7 +153,7 @@ def test_web_surface_extracts_api_assets_auth_and_vendor_references(
 
     assert result.status == "success"
     assert result.records_received == 2
-    assert result.records_accepted > 0
+    assert result.records_accepted == 2
 
     endpoints = {
         (item.attributes["method"], item.attributes["path"])
