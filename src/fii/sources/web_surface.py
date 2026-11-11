@@ -195,6 +195,7 @@ class WebSurfaceFixtureCollector:
             )
 
         total_bytes = 0
+        accepted_files = 0
         observations: list[Observation] = []
         raw_evidence = []
         diagnostics: list[SourceDiagnostic] = []
@@ -248,6 +249,8 @@ class WebSurfaceFixtureCollector:
                     )
                 )
                 continue
+
+            accepted_files += 1
 
             if evidence.redactions_applied:
                 diagnostics.append(
@@ -319,7 +322,7 @@ class WebSurfaceFixtureCollector:
             started_at=collected_at,
             finished_at=utc_now(),
             records_received=len(files),
-            records_accepted=len(observations),
+            records_accepted=accepted_files,
             raw_evidence=tuple(raw_evidence),
             observations=tuple(observations),
             diagnostics=tuple(diagnostics),
