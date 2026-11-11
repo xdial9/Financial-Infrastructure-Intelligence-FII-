@@ -49,6 +49,7 @@ def write_raw_evidence(
     content: bytes,
     media_type: str,
     redact_text: bool = False,
+    original_content_sha256: str | None = None,
 ) -> RawEvidenceReference:
     """Store bytes privately, without overwriting prior evidence.
 
@@ -60,6 +61,10 @@ def write_raw_evidence(
 
     raw_bytes = content
     original_digest = hashlib.sha256(raw_bytes).hexdigest()
+    if original_content_sha256 is not None:
+        if not re.fullmatch(r"[0-9a-f]{64}", original_content_sha256):
+            raise EvidenceWriteError("Original content digest must be lowercase SHA-256.")
+        original_digest = original_content_sha256
     redactions = 0
     if redact_text:
         try:
