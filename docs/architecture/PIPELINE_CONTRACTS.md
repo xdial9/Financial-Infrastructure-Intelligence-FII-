@@ -161,3 +161,9 @@ Collector rules:
 - Likely credential values are redacted from saved web text. The retained evidence SHA-256 and original input digest are both recorded; no secret value belongs in an observation, log or database row.
 - Source parsing/unavailability errors produce failed or partial source results. Failure to write or safely reference raw evidence is a fatal persistence error and must propagate to the run controller.
 - Raw evidence paths are private, content-addressed, relative to the run's raw directory and never overwrite an existing file.
+
+- Live public-source retrieval is disabled by default. A caller must explicitly set `live_collection_approved=True` after source-specific terms, licensing, robots policy, limits and engagement scope have been reviewed.
+- The shared HTTP helper permits HTTPS GET only, sends no cookies or authorization headers, refuses redirects, applies explicit timeout/response-size limits, and reports HTTP 429/Retry-After without automatic retries.
+- The crt.live adapter makes one request for one approved seed domain and one page per invocation; it does not paginate or retry. Names outside the approved domain/subdomain are not retained.
+- The public website snapshot adapter retrieves one approved HTTPS HTML page and a bounded number of same-scope JavaScript assets. It does not retrieve unapproved CDN assets, source maps, links or discovered API endpoints. All fetched JavaScript is parsed as text, never executed.
+- Test suites mock the HTTP layer. CI must not contact real providers, websites or institutions.
