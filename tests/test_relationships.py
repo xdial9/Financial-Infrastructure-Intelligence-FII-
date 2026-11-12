@@ -260,7 +260,7 @@ def test_rule_rejects_wrong_entity_types_and_unanchored_or_wrong_run_evidence(
                     evidence=(RelationshipEvidence(values["observation_a"]),),
                 ),
             )
-        with pytest.raises(RelationshipError, match="requires 'rdap_nameserver'"):
+        with pytest.raises(RelationshipError, match="requires 'integration_reference'"):
             propose_relationship(
                 connection,
                 RelationshipProposal(
