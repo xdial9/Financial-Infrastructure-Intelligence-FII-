@@ -121,17 +121,20 @@ def test_empty_database_creation_and_versioned_idempotent_migrations(tmp_path: P
     database = tmp_path / "database" / "fii.sqlite3"
     database.parent.mkdir()
 
-    assert initialize_database(database) == 1
+    assert initialize_database(database) == 2
     connection = connect_database(database)
     try:
         first = connection.execute(
             "SELECT version, name, checksum FROM schema_migrations"
         ).fetchall()
-        assert len(first) == 1
-        assert first[0]["version"] == 1
-        assert first[0]["name"] == "initial"
+        assert len(first) == 2
+        assert [row["version"] for row in first] == [1, 2]
+        assert [row["name"] for row in first] == [
+            "initial",
+            "normalization_entity_resolution",
+        ]
 
-        assert migrate_database(connection) == 1
+        assert migrate_database(connection) == 2
         second = connection.execute(
             "SELECT version, name, checksum FROM schema_migrations"
         ).fetchall()
@@ -143,6 +146,12 @@ def test_empty_database_creation_and_versioned_idempotent_migrations(tmp_path: P
                 "SELECT name FROM sqlite_master WHERE type = 'table'"
             )
         }
+        observation_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(observation)")
+        }
+        assert "canonicalization_version" in observation_columns
+
         assert {
             "engagement",
             "run",
@@ -157,6 +166,11 @@ def test_empty_database_creation_and_versioned_idempotent_migrations(tmp_path: P
             "relationship_evidence",
             "finding",
             "finding_evidence",
+            "entity_type_registry",
+            "identifier_type_registry",
+            "observation_provenance",
+            "entity_resolution_decision",
+            "entity_resolution_candidate",
         } <= tables
     finally:
         connection.close()
@@ -433,7 +447,7 @@ def test_integrity_check_and_backup_restore(tmp_path: Path) -> None:
     try:
         assert check_integrity(restored).ok
         assert restored.execute("SELECT COUNT(*) FROM observation").fetchone()[0] == 1
-        assert restored.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 1
+        assert restored.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
     finally:
         restored.close()
 

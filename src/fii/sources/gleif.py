@@ -197,6 +197,7 @@ class GLEIFCollector:
 
             common_attributes = {
                 "provider": "GLEIF Global LEI Index",
+                "lei": lei,
                 "query_value": query_value,
                 "match_method": match_method,
                 "candidate_match": match_method == "name_search_candidate",

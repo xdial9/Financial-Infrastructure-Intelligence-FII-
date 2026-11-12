@@ -184,15 +184,26 @@ Exit criteria:
 
 ## Block 08 — Normalization, deduplication and entity resolution
 
+**Status:** Implemented on draft PR #5 / branch \`build/block-08-normalization-entity-resolution\`, stacked on the exact Block 07 head. Final CI verification is pending.
+
 Deliverables:
-- Canonical observation schema.
-- Deduplication key and provenance merge rules.
-- Entity types and identifier registry.
-- Deterministic entity resolution.
+- Versioned canonical observation normalization and deterministic SHA-256 deduplication keys.
+- Subject-aware semantic keying: nameserver facts retain parent-domain context, and GLEIF legal-name facts retain their LEI identity.
+- Transactional persistence into the existing observation store with one canonical fact row, all source-execution links and per-source raw evidence hashes/paths/URLs/timestamps/attributes.
+- Secondary source contributions start as context; deduplication does not automatically claim independent corroboration or promote verification state.
+- A fixed entity-type registry and type-specific identifier registry with normalization and strong/weak resolution policy.
+- Deterministic exact-identifier resolution, provisional entities for weak-name-only inputs, candidate generation for similar names, explicit conflict decisions for inconsistent exact identifiers and persisted rule/version rationale.
+- Additive SQLite migration 0002 and offline tests for normalization, provenance, conflicting observations, exact identifiers and non-merging name candidates.
 
 Exit criteria:
-- The same observation from two sources produces one canonical fact with two source references.
-- Similar-looking entities are not merged without a rule/evidence.
+- The same canonical observation from two source executions creates one fact with two source links and two distinct evidence references.
+- Contradictory values and observations about different parent domains remain separate.
+- Repeated persistence is idempotent and does not silently change an existing fact's verification state.
+- Only exact registered strong identifiers for the correct entity type auto-resolve.
+- Similar/exact legal names and brand names create review candidates, never automatic merges.
+- Conflicting strong identifiers or a conflicting existing subject assignment produce a conflict decision and do not reassign either entity.
+- Every entity resolution decision is linked to a source observation and stores a rule/version and human-readable rationale.
+- All tests use synthetic data and local SQLite; no live provider calls are part of this block.
 
 ## Block 09 — Relationship correlation and analyst review
 

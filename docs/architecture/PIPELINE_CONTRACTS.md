@@ -176,3 +176,16 @@ Collector rules:
 - GLEIF records may contain independent entity-status and LEI-registration-status values; preserve both. Missing optional data and redacted fields are omitted. A missing field is not evidence that the field's real-world value is absent.
 - Both adapters retain content-addressed raw evidence with source-response digests and source URLs. RDAP response evidence is minimized to public infrastructure fields; GLEIF response evidence is minimized to legal-entity reference fields. No contact data is required for these enrichment goals.
 - All live network requests require live_collection_approved=True. Tests use synthetic fixtures and mocked HTTP responses only.
+
+
+### Block 08 normalization, deduplication and entity resolution
+
+- Normalize source observations using a versioned, deterministic canonicalization contract. Preserve source values in provenance and source raw evidence; store canonical fact values and stable comparison keys.
+- Deduplication keys include observation type, canonical value, source event timestamp when present and semantic scope attributes. Volatile query/provider metadata and transport URLs are not key material. Subject/scope discriminators (for example, parent domain and LEI) prevent unrelated observations from collapsing.
+- One canonical fact stores one primary source row and retains every distinct source execution in \`observation_source_link\` plus each source-object hash/path/URL/timestamp/attributes in \`observation_provenance\`. Secondary source links begin as context. Do not automatically set verification_state=corroborated merely because deduplication found a second source.
+- Contradictory values remain separate canonical observations. Deduplication never chooses a winner or overwrites a source observation.
+- Entity and identifier types are drawn from the fixed, versioned registry. Strong identifiers resolve only the registry-matched entity type; weak name/brand/package identifiers create candidate references.
+- Similar names never auto-merge. Exact legal-name matches are still candidates, with jurisdiction and source rationale. Conflicting exact identifiers create a conflict decision and leave existing subject assignments unchanged.
+- Domain/hostname/IP/ASN identities are infrastructure entities; shared infrastructure is not evidence that two organizations are the same entity.
+- Entity-resolution decisions persist rule/version, source observation, outcome and rationale. Candidate links are separately persisted for analyst review in Block 09.
+- These operations are deterministic and offline. They make no network requests and do not alter raw source evidence.
