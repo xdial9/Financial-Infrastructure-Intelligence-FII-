@@ -63,6 +63,23 @@ Use the public JSON API for one explicitly approved seed domain per invocation. 
 
 The provider documentation describes a maximum page limit of 10,000 and a limit of 120 requests per minute per address, and cautions that CT names do not prove a host exists or resolves. FII deliberately issues one request per manual invocation. The response does not provide the full certificate issuer/serial/validity/key metadata set. Before invocation, an operator must review the provider's current terms and rate guidance. Reference: [crt.live API documentation](https://crt.live/about).
 
+
+### S-015 — RDAP domain registration enrichment
+**Priority:** P0 for approved seed domains; implemented in Block 07.
+
+Use the IANA DNS RDAP bootstrap registry to resolve the authoritative RDAP service for one approved domain, selecting the longest matching domain suffix as specified in [RFC 9224](https://www.rfc-editor.org/rfc/rfc9224.html). Retrieve one domain object from that service. The adapter uses HTTPS bootstrap/service URLs, one query per invocation, explicit live approval, bounded response sizes and timeouts, no redirects, no automatic retries and no pagination.
+
+Retain registry-reported domain status, registration/expiration events, nameservers and registrar identity/identifier when published. Registrar identity is not registrant or domain ownership. Registrant, administrative and technical contact/vCard fields are excluded from retained evidence; missing or redacted fields are omitted rather than treated as errors or inferred. A nameserver is a registry-reported configuration observation, not proof of current DNS resolution or provider ownership.
+
+The IANA bootstrap registry identifies the authoritative RDAP service for a TLD and is not itself a registry of the domain registrant. TLD registry coverage, response fields, redaction and retention policies vary. Some names may not be represented by an RDAP service in the bootstrap data. References: [IANA RDAP DNS bootstrap registry](https://www.iana.org/assignments/rdap-dns/), [RFC 9224](https://www.rfc-editor.org/rfc/rfc9224.html), [RDAP JSON response standard](https://www.rfc-editor.org/rfc/rfc9083.html).
+
+### S-016 — GLEIF Global LEI Index
+**Priority:** P0 for approved legal-entity enrichment; implemented in Block 07.
+
+Use the official GLEIF API to look up one approved legal-entity name or one LEI per invocation. Name searches return candidate matches and must not be auto-resolved to an operator's entity. Exact LEI lookups provide a direct record identifier. The adapter retains the LEI, legal name, entity status, registration status, jurisdiction, legal-form code, registration dates, managing LEI issuer and relationship references present in the returned record. It does not recursively fetch linked records or automatically promote a relationship into a graph assertion.
+
+GLEIF's API is based on the Global LEI Index/Golden Copy and provides legal-entity and ownership-data search functionality. LEI data is not universal coverage of all businesses: an organization without an LEI will not be found. Entity status and LEI registration status are distinct fields. GLEIF relationship references are evidence to review, not proof that an institution uses a vendor or offers a capability. Contact and street-address detail is excluded from retained evidence. GLEIF's LEI reference data is available under CC0; FII does not use GLEIF trademarks or imply endorsement. References: [GLEIF API](https://www.gleif.org/en/lei-data/gleif-api), [API documentation](https://api.gleif.org/docs), [LEI Data Terms of Use](https://www.gleif.org/en/meta/lei-data-terms-of-use).
+
 ## 3. Optional infrastructure intelligence sources
 
 ### S-007 — Passive DNS provider

@@ -4,7 +4,7 @@
 **Base branch:** `build/block-05-sqlite-evidence-store`  
 **Base commit:** `f2d1b6ed1f40c91f978b9cb1121967100295b206`  
 **Pull request:** [Draft PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3)  
-**Verified code head:** `b1243f61f967b0c2bbc03134509108ba6179caa4`
+**Verified code head:** `90acdba46d19c521736a9e9ab941bd6d96a11af3`
 
 ## Implemented scope
 
@@ -65,7 +65,7 @@ No live CT query, public page retrieval or financial-institution request was mad
 
 ## Verification
 
-GitHub Actions [run #37](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121856605) completed successfully on code head `b1243f61f967b0c2bbc03134509108ba6179caa4`:
+GitHub Actions [run #40](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43122085135) completed successfully on PR head `90acdba46d19c521736a9e9ab941bd6d96a11af3`:
 - Python 3.11: 68 passed; Ruff all checks passed.
 - Python 3.12: 68 passed; Ruff all checks passed.
 - Python 3.13: 68 passed; Ruff all checks passed.

@@ -63,6 +63,8 @@ class CollectionContext:
     raw_directory: Path
     fixture_path: Path | None = None
     approved_domains: tuple[str, ...] = ()
+    organization_names: tuple[str, ...] = ()
+    legal_entity_identifiers: tuple[str, ...] = ()
     source_url: str | None = None
     collected_at: str = field(default_factory=utc_now)
     max_fixture_bytes: int = 5 * 1024 * 1024
@@ -95,6 +97,22 @@ class CollectionContext:
             raise ValueError("A single-line non-empty user agent is required.")
         if not isinstance(self.live_collection_approved, bool):
             raise ValueError("live_collection_approved must be true or false.")
+        if len(self.organization_names) > 100 or len(self.legal_entity_identifiers) > 100:
+            raise ValueError("Entity seed lists cannot exceed 100 entries each.")
+        if any(
+            not isinstance(name, str) or not name.strip() or len(name) > 240
+            for name in self.organization_names
+        ):
+            raise ValueError(
+                "Organization names must be non-empty strings of at most 240 characters."
+            )
+        if any(
+            not isinstance(identifier, str) or not identifier.strip() or len(identifier) > 20
+            for identifier in self.legal_entity_identifiers
+        ):
+            raise ValueError(
+                "Legal entity identifiers must be non-empty strings of at most 20 characters."
+            )
 
 
 @dataclass(frozen=True)
