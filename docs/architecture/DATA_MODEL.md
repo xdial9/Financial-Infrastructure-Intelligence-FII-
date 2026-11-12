@@ -273,3 +273,43 @@ Do not put API keys, passwords, customer tokens or secrets in SQLite, source JSO
 - Back up the SQLite database before a migration.
 - Refuse to run if the database schema is newer than the application supports.
 - Never silently rebuild or delete the database.
+
+
+## 7. Canonical observation and provenance rules (Block 08)
+
+Source observations are normalized into versioned canonical facts before persistence. The canonical fact uses the existing \`observation\` record and its \`deduplication_key\`; source-specific evidence contributions are retained separately in \`observation_provenance\`.
+
+A canonicalization key is the SHA-256 digest of deterministic JSON containing:
+- canonicalization version;
+- normalized observation type;
+- canonical comparison value;
+- normalized source event timestamp, when present;
+- semantic attributes that identify the fact's subject or scope.
+
+Transport/provenance attributes such as provider label, request query and match-method metadata are excluded from the key. Source URL, raw hash and collection time are not identity fields. Subject/scope attributes such as the parent domain for an RDAP nameserver or LEI for a legal-name observation remain in the key.
+
+Two observations with the same key produce one \`observation\` row. Their source executions remain in \`observation_source_link\`; each source-object digest, path, URL, timestamps and source attributes are retained in \`observation_provenance\`. Secondary source links are initially recorded as context, not automatically asserted as independent corroboration. Distinct observed values or distinct subject scopes remain separate rows, preserving contradictions.
+
+The stored \`verification_state\` remains \`observed\` or \`unverified\` at this stage. Deduplication does not promote a fact to corroborated, inferred or verified. Raw source files remain immutable and are not rewritten by normalization.
+
+## 8. Entity types and identifier registry
+
+The versioned registry controls entity types, identifier scope, normalization and resolution strength. Initial entity types are organization, vendor, domain, hostname, IP address, autonomous system, certificate, application, API endpoint and documentation resource.
+
+Initial identifier families include:
+- Strong exact identifiers: LEI, SEC CIK, Companies House number, domain, hostname, IP address, ASN and certificate SHA-256. Each identifier family is restricted to its registered entity type.
+- Weak candidate identifiers: legal name, brand name and ecosystem-scoped package ID. These support search/review but cannot auto-merge entities.
+
+Identifier values are normalized by type (for example, LEI uppercase, SEC CIK zero-padded, domain IDNA/lowercase, IP compressed notation). Registry definitions are persisted with a version. A code registry change requires a version change; incompatible persisted registry definitions fail loudly.
+
+## 9. Entity resolution decisions
+
+Every resolution decision references the source observation and run, records a rule ID/version, outcome, rationale and optional confidence, and persists candidate links separately.
+
+- An exact strong identifier may create a canonical entity or attach an observation to the single entity already carrying that identifier.
+- If exact identifiers point to different entities, if one exact identifier has duplicate entity mappings, or if an observation is already assigned inconsistently, the outcome is conflict/ambiguous and no reassignment occurs.
+- A source observation without a strong identifier receives an observation-anchored provisional entity. Exact or similar names produce review candidates, not auto-merges.
+- Jurisdiction agreement/mismatch is included in candidate rationale. Different jurisdictions are not silently collapsed.
+- Domain/hostname identifiers resolve infrastructure entities, not organizations. A shared domain, IP, nameserver or vendor name is not sufficient to merge legal entities.
+
+Manual analyst acceptance/rejection of entity candidates and persistent entity-merge audit history are reserved for Block 09.
