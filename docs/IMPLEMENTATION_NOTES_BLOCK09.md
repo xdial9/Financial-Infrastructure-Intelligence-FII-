@@ -3,7 +3,7 @@
 Branch: build/block-09-relationship-correlation-analyst-review  
 Base branch: build/block-08-normalization-entity-resolution  
 Base commit: c23c18db3241dfce81d7ae70b74908d32c8722be  
-Implementation branch head: 757f6e363e46778ee84e8836517547aacff1195e  
+Implementation code commit: 757f6e363e46778ee84e8836517547aacff1195e  
 Draft PR: [#6](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/6)
 
 ## Scope
