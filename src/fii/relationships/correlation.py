@@ -221,8 +221,8 @@ def propose_relationship(
                         )
                     if role == "supports" and not value_matches:
                         raise RelationshipError(
-                            f"Supporting RDAP value {observation['observed_value']!r} does not match "
-                            f"hostname key {object_entity['canonical_key']!r}."
+                            f"Supporting RDAP value {observation['observed_value']!r} "
+                            f"does not match hostname key {object_entity['canonical_key']!r}."
                         )
                     if role == "contradicts" and value_matches:
                         raise RelationshipError(

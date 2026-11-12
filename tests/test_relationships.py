@@ -64,7 +64,7 @@ def _seed(connection: sqlite3.Connection) -> dict[str, str]:
             """,
             (values["run"], values["engagement"], values["now"], "a" * 64, "b" * 64),
         )
-        for source_id, execution_id, observation_id, source_name in (
+        for source_id, execution_id, _observation_id, source_name in (
             ("fixture_rdap_a", values["execution_a"], values["observation_a"], "Fixture A"),
             ("fixture_rdap_b", values["execution_b"], values["observation_b"], "Fixture B"),
         ):
