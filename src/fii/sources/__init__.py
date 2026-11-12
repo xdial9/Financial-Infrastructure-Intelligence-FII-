@@ -13,6 +13,8 @@ from fii.sources.contracts import (
 )
 from fii.sources.ct_live import CTLiveCollector
 from fii.sources.ct_logs import CTLogsFixtureCollector
+from fii.sources.gleif import GLEIFCollector
+from fii.sources.rdap import RDAPCollector
 from fii.sources.registry import SourceRegistry, get_default_registry
 from fii.sources.web_surface import (
     PublicWebsiteSnapshotCollector,
@@ -25,6 +27,8 @@ __all__ = [
     "CollectionContext",
     "CollectionResult",
     "EvidenceWriteError",
+    "GLEIFCollector",
+    "RDAPCollector",
     "Observation",
     "RawEvidenceReference",
     "SourceCollectionError",

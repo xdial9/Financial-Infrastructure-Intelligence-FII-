@@ -150,7 +150,7 @@ definition: SourceDefinition
 collect(context: CollectionContext) -> CollectionResult
 ```
 
-The context carries the run ID, approved seed domains, optional fixture location, raw-evidence directory, source URL and bounded input-size settings. The result carries source status, timestamps, received/accepted counters, immutable raw-evidence references, typed observations and sanitized diagnostics.
+The context carries the run ID, approved seed domains, approved organization-name/LEI seeds, optional fixture location, raw-evidence directory, source URL and bounded input-size settings. The result carries source status, timestamps, received/accepted counters, immutable raw-evidence references, typed observations and sanitized diagnostics.
 
 Collector rules:
 - Sources run sequentially. A collector cannot start another collector or a later pipeline stage.
@@ -167,3 +167,12 @@ Collector rules:
 - The crt.live adapter makes one request for one approved seed domain and one page per invocation; it does not paginate or retry. Names outside the approved domain/subdomain are not retained.
 - The public website snapshot adapter retrieves one approved HTTPS HTML page and a bounded number of same-scope JavaScript assets. It does not retrieve unapproved CDN assets, source maps, links or discovered API endpoints. All fetched JavaScript is parsed as text, never executed.
 - Test suites mock the HTTP layer. CI must not contact real providers, websites or institutions.
+
+
+### Block 07 enrichment adapters
+
+- rdap_domain accepts exactly one approved seed domain. The live adapter retrieves IANA's DNS RDAP bootstrap JSON, selects the longest matching domain suffix per RFC 9224, then retrieves one domain object from the selected HTTPS service. It does not follow redirects, paginate or retry. Only registry status, event dates, nameserver names and registrar identity are retained. Registrant/admin/technical contact and vCard details are excluded.
+- gleif_lei accepts exactly one approved organization name or 20-character LEI. Name-search results remain candidate matches. It retrieves one API page (default 10 records; adapter maximum 50) and does not auto-paginate or follow relationship links. Legal-entity identity and registration fields are emitted as observations; relationship identifiers remain source-reported references, not inferred relationships.
+- GLEIF records may contain independent entity-status and LEI-registration-status values; preserve both. Missing optional data and redacted fields are omitted. A missing field is not evidence that the field's real-world value is absent.
+- Both adapters retain content-addressed raw evidence with source-response digests and source URLs. RDAP response evidence is minimized to public infrastructure fields; GLEIF response evidence is minimized to legal-entity reference fields. No contact data is required for these enrichment goals.
+- All live network requests require live_collection_approved=True. Tests use synthetic fixtures and mocked HTTP responses only.

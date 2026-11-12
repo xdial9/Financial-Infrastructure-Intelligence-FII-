@@ -1,0 +1,46 @@
+{
+  "response": {
+    "meta": {
+      "goldenCopy": {"publishDate": "2026-11-10T08:00:00Z"},
+      "pagination": {"total": 2, "currentPage": 1, "perPage": 2, "lastPage": 1}
+    },
+    "data": [
+      {
+        "id": "5493001KJTIIGC8Y1R12",
+        "type": "lei-records",
+        "attributes": {
+          "entity": {
+            "legalName": {"name": "Example Financial Technologies Ltd"},
+            "status": "ACTIVE",
+            "jurisdiction": "GB",
+            "legalForm": {"id": "7H6G"},
+            "legalAddress": {"country": "GB", "city": "London", "addressLines": ["Private Office Address"]},
+            "registeredAs": "12345678",
+            "registrationAuthority": {"id": "RA000585"}
+          },
+          "registration": {
+            "status": "ISSUED",
+            "initialRegistrationDate": "2018-04-10T00:00:00Z",
+            "lastUpdateDate": "2026-10-20T12:30:00Z",
+            "managingLou": "5493000J4Z1XQ6S9A4B2"
+          }
+        },
+        "relationships": {
+          "direct-parent": {
+            "data": {"id": "213800D1EI4B9WTWWD28", "type": "lei-records"}
+          },
+          "lei-issuer": {
+            "data": {"id": "5493000J4Z1XQ6S9A4B2", "type": "lei-issuers"}
+          }
+        }
+      },
+      {
+        "id": "213800D1EI4B9WTWWD28",
+        "type": "lei-records",
+        "attributes": {
+          "entity": {"legalName": {"name": "Example Parent Group plc"}}
+        }
+      }
+    ]
+  }
+}

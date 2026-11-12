@@ -112,6 +112,8 @@ def test_registry_is_fixed_and_definitions_are_deterministic() -> None:
     assert registry.source_ids() == (
         "ct_live",
         "ct_logs",
+        "gleif_lei",
+        "rdap_domain",
         "web_surface",
         "website_public",
     )
@@ -119,11 +121,15 @@ def test_registry_is_fixed_and_definitions_are_deterministic() -> None:
     assert [item.source_id for item in definitions] == [
         "ct_live",
         "ct_logs",
+        "gleif_lei",
+        "rdap_domain",
         "web_surface",
         "website_public",
     ]
     assert all(item.default_enabled is False for item in definitions)
     assert registry.get("ct_live").definition.integration_kind == "provider_api"
+    assert registry.get("gleif_lei").definition.integration_kind == "provider_api"
+    assert registry.get("rdap_domain").definition.integration_kind == "builtin"
     assert registry.get("ct_logs").definition.source_class == "public_api"
     assert registry.get("web_surface").definition.source_class == "targeted_public_web"
     assert registry.get("website_public").definition.source_class == "targeted_public_web"

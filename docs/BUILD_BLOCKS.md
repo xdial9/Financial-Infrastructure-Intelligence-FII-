@@ -128,8 +128,8 @@ Exit criteria:
 **Status:** Code and tests CI-verified on draft [PR #3](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/3), branch `build/block-06-collector-contract-passive-sources`, stacked on Block 05.
 
 Verification:
-- Verified final code head: `b1243f61f967b0c2bbc03134509108ba6179caa4`.
-- GitHub Actions [run #37](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43121856605) completed successfully.
+- Verified final PR head: `90acdba46d19c521736a9e9ab941bd6d96a11af3`.
+- GitHub Actions [run #40](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43122085135) completed successfully.
 - Python 3.11, 3.12 and 3.13 each reported **68 tests passed**; `ruff check .` reported **All checks passed!** in all three jobs.
 - No local test result is claimed; GitHub Actions is the verification source. Documentation-only commits after the verified code head are also gated by CI before the block is closed.
 
@@ -158,15 +158,24 @@ Exit criteria:
 
 ## Block 07 — RDAP and official-source enrichment
 
+**Status:** Implementation and offline tests added on draft PR #4 / branch
+build/block-07-rdap-official-source-enrichment, stacked on Block 06. Awaiting GitHub CI.
+
 Deliverables:
-- RDAP adapter.
-- One official corporate or regulatory source adapter.
-- Source coverage/limitations recorded.
-- Normalized observation conversion.
+- IANA-bootstrapped RDAP collector for one approved domain per invocation. It applies RFC 9224 longest-suffix matching, makes one authoritative RDAP lookup after the IANA bootstrap request, and retains domain status, registration events, nameservers and registrar identity.
+- RDAP privacy minimization: registrar name/identifier may be retained; registrant, administrative and technical contact/vCard data are excluded. Missing/redacted fields are omitted.
+- GLEIF Global LEI Index collector for one approved organization name or LEI per invocation. It retains legal-entity identifier, legal name, entity/registration status, jurisdiction, legal form, dates, managing LEI issuer and relationship references present in the returned record.
+- Name-search matches remain candidates. Relationship references are recorded as source observations; the adapter does not fetch linked records or create ownership conclusions.
+- Fixture-backed offline paths, mocked HTTPS tests, source definitions/registry integration and source coverage/limitations documentation.
+- Both live adapters remain disabled by default and require explicit per-run approval. No live source request is made by CI.
 
 Exit criteria:
-- Two source families can contribute evidence without losing provenance.
-- Missing/redacted source fields are handled correctly.
+- RDAP and GLEIF results produce typed observations with source URLs and retained-evidence SHA-256 references.
+- RDAP uses the authoritative server resolved from the IANA bootstrap registry and rejects a response for a different domain.
+- GLEIF can look up a name candidate or exact LEI without silently asserting that a candidate is the same organization.
+- Optional/missing/redacted values are omitted; they do not make a valid source record fail.
+- Contact details are excluded from retained RDAP and GLEIF evidence.
+- Tests run offline with synthetic fixture data and mocked HTTP only.
 
 ## Block 08 — Normalization, deduplication and entity resolution
 

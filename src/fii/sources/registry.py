@@ -9,6 +9,8 @@ from __future__ import annotations
 from fii.sources.contracts import Collector, SourceDefinition
 from fii.sources.ct_live import CTLiveCollector
 from fii.sources.ct_logs import CTLogsFixtureCollector
+from fii.sources.gleif import GLEIFCollector
+from fii.sources.rdap import RDAPCollector
 from fii.sources.web_surface import (
     PublicWebsiteSnapshotCollector,
     WebSurfaceFixtureCollector,
@@ -56,7 +58,9 @@ def get_default_registry() -> SourceRegistry:
         (
             CTLiveCollector(),
             CTLogsFixtureCollector(),
+            GLEIFCollector(),
             PublicWebsiteSnapshotCollector(),
+            RDAPCollector(),
             WebSurfaceFixtureCollector(),
         )
     )
