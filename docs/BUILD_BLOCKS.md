@@ -184,7 +184,7 @@ Exit criteria:
 
 ## Block 08 — Normalization, deduplication and entity resolution
 
-**Status:** Implemented on draft PR #5 / branch \`build/block-08-normalization-entity-resolution\`, stacked on the exact Block 07 head. Final CI verification is pending.
+**Status:** Implemented on draft PR #5 / branch \`build/block-08-normalization-entity-resolution\`, stacked on the exact Block 07 head. CI-verified. Verified code head: `3122ef2ecc6298019781aecbeb57a191e3533243`. GitHub Actions [run #47](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43130127586) passed: Python 3.11, 3.12 and 3.13 each reported **92 tests passed** and Ruff **All checks passed!**. No local test result is claimed; documentation updates remain gated by final CI.
 
 Deliverables:
 - Versioned canonical observation normalization and deterministic SHA-256 deduplication keys.

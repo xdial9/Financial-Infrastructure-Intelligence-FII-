@@ -3,7 +3,8 @@
 Branch: build/block-08-normalization-entity-resolution  
 Base branch: build/block-07-rdap-official-source-enrichment  
 Base commit: 4e2c04c05ec4875251eb2bcd4433010c64dbb1f5  
-Pull request: Draft PR #5 (opened after the implementation commit)
+Pull request: [Draft PR #5](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/5)
+Verified code head: 3122ef2ecc6298019781aecbeb57a191e3533243
 
 ## Implementation
 
@@ -60,9 +61,15 @@ Adds:
 
 Migration is additive; migration 0001 is unchanged. Existing observations retain canonicalization version legacy-v1 until reprocessed by a future explicit migration/stage. No records are rewritten during schema migration.
 
-## Verification plan
+## Verification
 
-GitHub Actions runs the full Python 3.11/3.12/3.13 test matrix and Ruff. Tests use temporary local SQLite databases and synthetic identifiers/observations only. No live RDAP, GLEIF, financial-institution, website or provider API requests are made.
+GitHub Actions [run #47](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43130127586) completed successfully on code head `3122ef2ecc6298019781aecbeb57a191e3533243`.
+
+- Python 3.11: **92 tests passed**; Ruff: **All checks passed**.
+- Python 3.12: **92 tests passed**; Ruff: **All checks passed**.
+- Python 3.13: **92 tests passed**; Ruff: **All checks passed**.
+
+No local test result is claimed. Tests use temporary local SQLite databases and synthetic identifiers/observations only. No live RDAP, GLEIF, financial-institution, website or provider API requests are made.
 
 ## Coverage limits and deferred work
 
