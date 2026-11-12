@@ -189,3 +189,16 @@ Collector rules:
 - Domain/hostname/IP/ASN identities are infrastructure entities; shared infrastructure is not evidence that two organizations are the same entity.
 - Entity-resolution decisions persist rule/version, source observation, outcome and rationale. Candidate links are separately persisted for analyst review in Block 09.
 - These operations are deterministic and offline. They make no network requests and do not alter raw source evidence.
+
+
+## 12. Relationship correlation and analyst review (Block 09)
+
+Relationship proposals use a fixed, versioned rule registry. Each rule constrains its predicate, subject/object entity types, permitted observation type and evidence semantics. Rules validate endpoint identity against source observations; unsupported or unanchored evidence is rejected.
+
+Every persisted relationship has at least one supporting observation. Evidence roles are supports, contradicts or context. Contradictions are retained as separate evidence links and force an observed assertion to remain unverified rather than selecting a winning source.
+
+Corroboration requires support from at least two distinct source definitions, not simply two source executions, and is not assigned when contradictory evidence is present. A confidence score is a deterministic heuristic associated with the rule and evidence counts; it is not a statistical probability. Rationale must state the evidence basis and limits.
+
+Static website references to vendors, API routes and API documentation are observations about public code/text. They do not prove an active vendor integration, reachable/functional endpoint, account validation capability, or authentication success. FII never invokes discovered routes or executes JavaScript to validate these relationships.
+
+Analyst dispositions (accepted, rejected, needs_research) are append-only, require reviewer label and rationale, and preserve prior/resulting evidence state. Acceptance does not upgrade an observed/inferred relationship to corroborated or verified. Rejection marks the relationship rejected; needs_research remains in the queue. Entity merging is not part of this stage.

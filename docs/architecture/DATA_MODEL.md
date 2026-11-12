@@ -313,3 +313,43 @@ Every resolution decision references the source observation and run, records a r
 - Domain/hostname identifiers resolve infrastructure entities, not organizations. A shared domain, IP, nameserver or vendor name is not sufficient to merge legal entities.
 
 Manual analyst acceptance/rejection of entity candidates and persistent entity-merge audit history are reserved for Block 09.
+
+
+## 10. Relationship correlation and analyst review (Block 09)
+
+Migration 0003 adds:
+
+### relationship_rule_registry
+
+| Column | Type | Rule |
+|---|---|---|
+| rule_id | TEXT PK | Fixed versioned rule ID |
+| predicate | TEXT NOT NULL | Typed relationship predicate |
+| subject_entity_types_json | TEXT NOT NULL | Allowed subject types |
+| object_entity_types_json | TEXT NOT NULL | Allowed object types |
+| observation_type | TEXT NOT NULL | Required evidence observation type |
+| default_state | TEXT NOT NULL | observed, inferred or unverified |
+| base_confidence | REAL NOT NULL | Deterministic heuristic score, not probability |
+| description | TEXT NOT NULL | Rule limitations and semantics |
+| rule_version | TEXT NOT NULL | Versioned rule implementation |
+
+Initial rules cover RDAP domain/nameserver assertions, static vendor references, static API route references and API documentation references. A vendor reference is not an assertion of operational integration.
+
+### relationship_review
+
+Append-only analyst decision history.
+
+| Column | Type | Rule |
+|---|---|---|
+| review_id | TEXT PK | Deterministic UUID |
+| relationship_id | TEXT FK | Reviewed assertion |
+| disposition | TEXT NOT NULL | accepted, rejected, needs_research |
+| reviewer_label | TEXT NOT NULL | Non-sensitive operator label |
+| rationale | TEXT NOT NULL | Required human rationale |
+| prior_verification_state | TEXT NOT NULL | State before review |
+| resulting_verification_state | TEXT NOT NULL | State after review |
+| reviewed_at | TEXT NOT NULL | ISO-8601 UTC timestamp |
+
+Database triggers reject UPDATE and DELETE against review history. Acceptance records analyst disposition without upgrading evidence state; rejection sets the relationship state to rejected. Needs-research remains in the review queue.
+
+Corroboration requires at least two distinct source definitions supporting the same assertion and no attached contradicting evidence. Multiple executions from one source definition do not count as independent corroboration. Contradicting evidence remains attached and prevents automatic corroboration.

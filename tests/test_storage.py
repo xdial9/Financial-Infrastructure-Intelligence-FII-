@@ -121,20 +121,21 @@ def test_empty_database_creation_and_versioned_idempotent_migrations(tmp_path: P
     database = tmp_path / "database" / "fii.sqlite3"
     database.parent.mkdir()
 
-    assert initialize_database(database) == 2
+    assert initialize_database(database) == 3
     connection = connect_database(database)
     try:
         first = connection.execute(
             "SELECT version, name, checksum FROM schema_migrations"
         ).fetchall()
-        assert len(first) == 2
-        assert [row["version"] for row in first] == [1, 2]
+        assert len(first) == 3
+        assert [row["version"] for row in first] == [1, 2, 3]
         assert [row["name"] for row in first] == [
             "initial",
             "normalization_entity_resolution",
+            "relationship_correlation_review",
         ]
 
-        assert migrate_database(connection) == 2
+        assert migrate_database(connection) == 3
         second = connection.execute(
             "SELECT version, name, checksum FROM schema_migrations"
         ).fetchall()
@@ -171,6 +172,8 @@ def test_empty_database_creation_and_versioned_idempotent_migrations(tmp_path: P
             "observation_provenance",
             "entity_resolution_decision",
             "entity_resolution_candidate",
+            "relationship_rule_registry",
+            "relationship_review",
         } <= tables
     finally:
         connection.close()
@@ -447,7 +450,7 @@ def test_integrity_check_and_backup_restore(tmp_path: Path) -> None:
     try:
         assert check_integrity(restored).ok
         assert restored.execute("SELECT COUNT(*) FROM observation").fetchone()[0] == 1
-        assert restored.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
+        assert restored.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 3
     finally:
         restored.close()
 
