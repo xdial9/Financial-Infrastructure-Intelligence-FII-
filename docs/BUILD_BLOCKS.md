@@ -158,8 +158,13 @@ Exit criteria:
 
 ## Block 07 — RDAP and official-source enrichment
 
-**Status:** Implementation and offline tests added on draft PR #4 / branch
-build/block-07-rdap-official-source-enrichment, stacked on Block 06. Awaiting GitHub CI.
+**Status:** CI-verified on draft [PR #4](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/4) / branch `build/block-07-rdap-official-source-enrichment`, stacked on Block 06.
+
+Verification:
+- Verified code head: `1a111361b006eb5bcba3edd2f16fc8771ac85f0b`.
+- GitHub Actions [run #42](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43128281281) completed successfully.
+- Python 3.11, 3.12 and 3.13 each reported **79 tests passed**; Ruff reported **All checks passed!** in all three jobs.
+- No local test result is claimed; GitHub Actions is the verification source.
 
 Deliverables:
 - IANA-bootstrapped RDAP collector for one approved domain per invocation. It applies RFC 9224 longest-suffix matching, makes one authoritative RDAP lookup after the IANA bootstrap request, and retains domain status, registration events, nameservers and registrar identity.

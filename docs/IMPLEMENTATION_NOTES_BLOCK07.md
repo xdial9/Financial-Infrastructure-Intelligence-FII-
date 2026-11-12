@@ -3,7 +3,8 @@
 Branch: build/block-07-rdap-official-source-enrichment  
 Base branch: build/block-06-collector-contract-passive-sources  
 Base commit: 90acdba46d19c521736a9e9ab941bd6d96a11af3  
-Pull request: Draft PR #4 (opened after the implementation commit)
+Pull request: [Draft PR #4](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/4)  
+Verified code head: 1a111361b006eb5bcba3edd2f16fc8771ac85f0b
 
 ## Implemented source families
 
@@ -48,7 +49,13 @@ Pull request: Draft PR #4 (opened after the implementation commit)
 
 ## Verification
 
-GitHub Actions results are recorded here after the Block 07 PR head has completed its Python 3.11/3.12/3.13 matrix and Ruff checks. Tests use synthetic fixtures and mocked HTTP only. No actual RDAP, IANA or GLEIF request is part of CI.
+GitHub Actions [run #42](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43128281281) completed successfully on verified code head 1a111361b006eb5bcba3edd2f16fc8771ac85f0b.
+
+- Python 3.11: **79 tests passed**; Ruff: **All checks passed**.
+- Python 3.12: **79 tests passed**; Ruff: **All checks passed**.
+- Python 3.13: **79 tests passed**; Ruff: **All checks passed**.
+
+The first PR run (#41) exposed Ruff-only line-length and unused-import findings; these were corrected and the full matrix passed on run #42. Tests use synthetic fixtures and mocked HTTP only. No actual RDAP, IANA or GLEIF request is part of CI. No local test result is claimed.
 
 ## Deliberately deferred
 
