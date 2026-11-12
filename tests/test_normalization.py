@@ -289,7 +289,7 @@ def test_provenance_paths_and_semantic_scope_are_validated() -> None:
             _observation("example.invalid", _sha("a")),
             "../outside/raw.json",
         )
-    with pytest.raises(NormalizationError, match="invalid"):
+    with pytest.raises(NormalizationError, match="embedded credentials"):
         deduplicate_observations(
             [
                 SourceObservationEnvelope(
