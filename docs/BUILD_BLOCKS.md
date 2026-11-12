@@ -2,7 +2,7 @@
 
 ## Block 09 — Relationship correlation and analyst review
 
-**Status:** Implementation on draft PR #6 / branch `build/block-09-relationship-correlation-analyst-review`, stacked on Block 08. Final CI verification is required before completion.
+**Status:** CI-verified on draft [PR #6](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/6) / branch `build/block-09-relationship-correlation-analyst-review`, stacked on Block 08. Final code head: `757f6e363e46778ee84e8836517547aacff1195e`. GitHub Actions [run #52](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43138667923) passed: Python 3.11, 3.12 and 3.13 each reported **102 tests passed** and Ruff **All checks passed!** No local test result is claimed.
 
 Deliverables:
 - Versioned SQLite migration 0003 with a fixed relationship-rule registry and append-only analyst review history.

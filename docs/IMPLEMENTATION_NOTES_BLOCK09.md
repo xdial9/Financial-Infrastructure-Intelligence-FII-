@@ -2,7 +2,9 @@
 
 Branch: build/block-09-relationship-correlation-analyst-review  
 Base branch: build/block-08-normalization-entity-resolution  
-Base commit: c23c18db3241dfce81d7ae70b74908d32c8722be
+Base commit: c23c18db3241dfce81d7ae70b74908d32c8722be  
+Implementation branch head: 757f6e363e46778ee84e8836517547aacff1195e  
+Draft PR: [#6](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/6)
 
 ## Scope
 
@@ -35,7 +37,13 @@ Acceptance records analyst disposition but does not upgrade an observed or infer
 
 ## Verification
 
-GitHub Actions CI is the verification source for this connector-authored branch. Tests use temporary SQLite databases and synthetic observations/entities only. No live RDAP, GLEIF, website, vendor or financial-institution endpoints are contacted. No local test result is claimed.
+GitHub Actions [run #52](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43138667923) completed successfully on final code head `757f6e363e46778ee84e8836517547aacff1195e`.
+
+- Python 3.11: **102 tests passed**; Ruff: **All checks passed**.
+- Python 3.12: **102 tests passed**; Ruff: **All checks passed**.
+- Python 3.13: **102 tests passed**; Ruff: **All checks passed**.
+
+No local test result is claimed. Tests use temporary SQLite databases and synthetic observations/entities only. No live RDAP, GLEIF, website, vendor or financial-institution endpoints are contacted.
 
 ## Deferred
 
