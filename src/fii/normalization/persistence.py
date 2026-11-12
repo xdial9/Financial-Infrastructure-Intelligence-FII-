@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from fii.normalization.observations import CanonicalObservation, ObservationProvenance
 from fii.storage.database import PersistenceError, transaction

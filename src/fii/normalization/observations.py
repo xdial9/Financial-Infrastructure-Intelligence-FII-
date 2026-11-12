@@ -10,10 +10,11 @@ import re
 import unicodedata
 import uuid
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import PurePosixPath
-from typing import Any, Iterable
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from fii.core.scope import ScopeError, normalize_domain
