@@ -123,11 +123,7 @@ def _seed(connection: sqlite3.Connection) -> dict[str, str]:
                           'observed', '{"domain":"example.invalid"}')
                 """,
                 (observation_id, values["run"], execution_id, values["domain"],
-                (
-                    "ns2.example.invalid"
-                    if observation_id == values["observation_b"]
-                    else "ns1.example.invalid"
-                ),
+                "ns1.example.invalid",
                  values["now"]),
             )
         connection.execute(
@@ -215,6 +211,12 @@ def test_contradicting_evidence_is_retained_and_prevents_corroboration(
     connection = connect_database(database)
     try:
         values = _seed(connection)
+        with transaction(connection):
+            connection.execute(
+                "UPDATE observation SET observed_value = 'ns2.example.invalid' "
+                "WHERE observation_id = ?",
+                (values["observation_b"],),
+            )
         result = propose_relationship(
             connection,
             _proposal(
@@ -266,7 +268,7 @@ def test_rule_rejects_wrong_entity_types_and_unanchored_or_wrong_run_evidence(
                     rule_id="website_references_vendor",
                     subject_entity_id=values["domain"],
                     object_entity_id=values["vendor"],
-                    evidence=(RelationshipEvidence(values["observation_vendor"]),),
+                    evidence=(RelationshipEvidence(values["observation_a"]),),
                 ),
             )
     finally:
