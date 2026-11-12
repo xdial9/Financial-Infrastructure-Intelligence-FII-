@@ -66,7 +66,9 @@ class GLEIFCollector:
 
     def collect(self, context: CollectionContext) -> CollectionResult:
         organization_names = tuple(
-            name.strip() for name in context.organization_names if isinstance(name, str) and name.strip()
+            name.strip()
+            for name in context.organization_names
+            if isinstance(name, str) and name.strip()
         )
         legal_entity_identifiers = tuple(
             identifier.strip().upper()
@@ -94,7 +96,10 @@ class GLEIFCollector:
             if not _LEI_RE.fullmatch(lei):
                 raise SourceCollectionError(
                     "invalid_lei",
-                    "A legal entity identifier must be exactly 20 uppercase alphanumeric characters.",
+                    (
+                        "A legal entity identifier must be exactly 20 uppercase "
+                        "alphanumeric characters."
+                    ),
                 )
             request_url = f"{GLEIF_API_BASE}/lei-records/{lei}"
             match_method = "exact_lei_lookup"
@@ -349,7 +354,11 @@ class GLEIFCollector:
             )
         return CollectionResult(
             source_id=self.definition.source_id,
-            status="partial" if any(item.severity == "warning" for item in diagnostics) else "success",
+            status=(
+                "partial"
+                if any(item.severity == "warning" for item in diagnostics)
+                else "success"
+            ),
             started_at=collected_at,
             finished_at=utc_now(),
             records_received=received,

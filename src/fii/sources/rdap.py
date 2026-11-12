@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
@@ -272,7 +271,10 @@ class RDAPCollector:
             diagnostics.append(
                 SourceDiagnostic(
                     "rdap_contact_entities_excluded",
-                    "RDAP contact entities were not retained; only the registrar identity was extracted.",
+                    (
+                        "RDAP contact entities were not retained; only the registrar "
+                        "identity was extracted."
+                    ),
                     "info",
                 )
             )
@@ -391,7 +393,10 @@ def _find_rdap_base_url(bootstrap: dict[str, Any], domain: str) -> str | None:
                 continue
             candidate = entry.lower().strip(".")
             candidate_labels = candidate.split(".")
-            if len(candidate_labels) <= len(labels) and labels[-len(candidate_labels):] == candidate_labels:
+            if (
+                len(candidate_labels) <= len(labels)
+                and labels[-len(candidate_labels):] == candidate_labels
+            ):
                 for url in urls:
                     if isinstance(url, str):
                         try:
