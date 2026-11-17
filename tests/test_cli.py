@@ -90,7 +90,10 @@ def test_help_displays_full_operator_workflow() -> None:
     result = CliRunner().invoke(main, ["--help"])
 
     assert result.exit_code == 0
-    for command in ("sources", "run", "resume", "status", "report", "review-queue", "review", "backup"):
+    for command in (
+        "sources", "run", "resume", "status",
+        "report", "review-queue", "review", "backup",
+    ):
         assert command in result.output
 
 
