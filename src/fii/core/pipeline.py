@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 from fii.core.run_controller import (
     RunError,
+    WorkspaceLock,
     begin_stage,
     create_run,
     finalize_run,
@@ -23,7 +24,7 @@ from fii.core.run_controller import (
     open_run,
     reconcile_interrupted_stages,
 )
-from fii.core.workspace import WorkspaceLock, WorkspacePaths, prepare_workspace
+from fii.core.workspace import WorkspacePaths, prepare_workspace
 from fii.normalization.entities import (
     EntityIdentifier,
     EntitySeed,
