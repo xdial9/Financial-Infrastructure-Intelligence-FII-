@@ -179,7 +179,7 @@ def _provenance(connection: sqlite3.Connection, run_id: str) -> list[dict[str, A
           AND se.run_id=p.run_id
         JOIN source_definition sd ON sd.source_id=se.source_id
         WHERE p.run_id=?
-        ORDER BY p.observation_id, p.source_id, p.provenance_id
+        ORDER BY p.observation_id, se.source_id, p.provenance_id
         """,
         (run_id,),
     ).fetchall()
