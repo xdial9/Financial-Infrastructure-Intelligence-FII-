@@ -10,7 +10,9 @@ import pytest
 
 from fii.core.config import load_config
 from fii.core.pipeline import PipelineError, execute_pipeline
-from fii.reporting import render_reports
+from fii.core.run_controller import create_run
+from fii.core.workspace import prepare_workspace
+from fii.reporting import ReportError, render_reports
 
 
 def _write_synthetic_configuration(tmp_path: Path, *, live: bool = False) -> Path:
@@ -145,6 +147,39 @@ def test_offline_pipeline_persists_evidence_and_correlates_entities(tmp_path: Pa
     assert manifest["counts"]["observations"] == result.observation_count
     assert manifest["verified_raw_evidence_files"]
     assert all(report.sha256[path.name] for path in report.files)
+
+    evidence_relative = manifest["verified_raw_evidence_files"][0]
+    evidence_path = result.run_directory / evidence_relative
+    evidence_path.write_bytes(evidence_path.read_bytes() + b"tampered")
+    with pytest.raises(ReportError, match="SHA-256"):
+        render_reports(result.database_path, result.run_id, result.run_directory)
+
+
+def test_packaged_synthetic_example_is_self_contained(tmp_path: Path) -> None:
+    config_path = Path(__file__).parents[1] / "examples" / "synthetic-demo" / "config.yaml"
+    config = load_config(config_path)
+    config["workspace"] = str(tmp_path / "workspace")
+
+    result = execute_pipeline(config, config_path)
+    report = render_reports(result.database_path, result.run_id, result.run_directory)
+
+    assert result.status == "completed"
+    assert result.observation_count >= 8
+    assert (report.directory / "executive-summary.md").is_file()
+    assert (report.directory / "report-manifest.json").is_file()
+
+
+def test_resume_rejects_changed_configuration_before_database_creation(tmp_path: Path) -> None:
+    config_path = _write_synthetic_configuration(tmp_path)
+    config = load_config(config_path)
+    workspace = prepare_workspace(config)
+    run_paths = create_run(workspace, config, implementation_version="0.2.0")
+
+    config["collection"]["request_timeout_seconds"] += 1
+    with pytest.raises(PipelineError, match="configuration changed"):
+        execute_pipeline(config, config_path, resume_run_id=run_paths.run_id)
+
+    assert not (workspace.database / "fii.sqlite3").exists()
 
 
 def test_live_source_fails_closed_before_workspace_creation(tmp_path: Path) -> None:
