@@ -985,7 +985,7 @@ def execute_pipeline(
                 status = "partial"
             elif failed_count and success_count == 0:
                 status = "failed"
-            elif failed_count or required_failures:
+            elif failed_count or counts.get("skipped", 0) or required_failures:
                 status = "partial"
             else:
                 status = "completed"

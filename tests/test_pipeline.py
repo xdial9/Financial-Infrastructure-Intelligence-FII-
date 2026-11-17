@@ -13,6 +13,7 @@ from fii.core.pipeline import PipelineError, execute_pipeline
 from fii.core.run_controller import create_run
 from fii.core.workspace import prepare_workspace
 from fii.reporting import ReportError, render_reports
+from fii.sources.contracts import CollectionResult, utc_now
 
 
 def _write_synthetic_configuration(tmp_path: Path, *, live: bool = False) -> Path:
@@ -180,6 +181,37 @@ def test_resume_rejects_changed_configuration_before_database_creation(tmp_path:
         execute_pipeline(config, config_path, resume_run_id=run_paths.run_id)
 
     assert not (workspace.database / "fii.sqlite3").exists()
+
+
+def test_optional_source_skip_downgrades_run_to_partial(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import fii.core.pipeline as pipeline_module
+
+    config_path = _write_synthetic_configuration(tmp_path)
+    config = load_config(config_path)
+    config["sources"] = {
+        "ct_logs": {
+            "enabled": True,
+            "fixture": str(tmp_path / "ct.json"),
+            "required": False,
+        }
+    }
+
+    def skip_source(collector, context):
+        timestamp = utc_now()
+        return CollectionResult(
+            source_id=collector.definition.source_id,
+            status="skipped",
+            started_at=timestamp,
+            finished_at=timestamp,
+        )
+
+    monkeypatch.setattr(pipeline_module, "run_collector", skip_source)
+    result = execute_pipeline(config, config_path)
+
+    assert result.status == "partial"
+    assert result.source_counts == {"skipped": 1}
 
 
 def test_live_source_fails_closed_before_workspace_creation(tmp_path: Path) -> None:
