@@ -34,11 +34,12 @@ No login, credential/session capture, customer account/payment data, exploitatio
 - The 105-test baseline passed on Python 3.11, 3.12 and 3.13 with Ruff.
 - Subsequent CLI tests increased the suite to 108 tests; those tests passed on all three versions. The associated CI run was blocked only by a single Ruff line-length violation in the test itself, corrected in a later commit.
 - GitHub Actions run #77 on the final PR head passed: 111 tests on Python 3.11, 3.12 and 3.13; Ruff passed on all three.
-- Post-merge main-branch run #78 on merge commit `c83ea1692ff9e4841e8a75f59549254a91271853` also passed: 111 tests and Ruff on Python 3.11, 3.12 and 3.13.
+- Post-merge main-branch run #78 on merge commit `c83ea1692ff9e4841e8a75f59549254a91271853` passed: 111 tests and Ruff on Python 3.11, 3.12 and 3.13.
+- Main-branch run #83 on commit `a02caa28e19873aa8123d4b01b0f97d5f4e08be7` passed: **113 tests** on Python 3.11, 3.12 and 3.13, with Ruff passing on every job. This includes a full CLI run → status → report → backup workflow and validation of both example config fixture paths.
 
 ## Release gates
 
-1. Run the documented synthetic workflow on an operator workstation and verify the generated package locally.
+1. Run the documented synthetic workflow on an operator workstation and verify the generated package locally; CI now exercises the same full CLI sequence in temporary storage.
 2. Review database backup/restore, report contents and the engagement's evidence retention policy.
 3. Publish the `v0.2.0` Git tag/release after the operator smoke test; the version and changelog are already committed.
 4. Before any live collection, document written authorization and complete source-specific terms/licensing/privacy/rate-limit review.

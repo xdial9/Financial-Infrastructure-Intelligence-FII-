@@ -28,3 +28,7 @@
 
 ### Validation
 GitHub Actions is the release gate for Python 3.11, 3.12 and 3.13 plus Ruff. The release tag should be created only from the merged, fully green integration commit.
+### Final main-branch verification
+- GitHub Actions run #83: 113 tests passed on Python 3.11, 3.12 and 3.13.
+- Ruff passed on all three Python jobs.
+- Full CLI smoke path exercised in CI: run, status, report regeneration and verified backup.

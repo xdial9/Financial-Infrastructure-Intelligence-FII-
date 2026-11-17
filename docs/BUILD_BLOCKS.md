@@ -78,7 +78,7 @@ Deliverables:
 
 ## Block 14 — Hardening, packaging and v0.2.0
 
-**Status:** Implemented and merged to `main` in PR #7. Post-merge CI run #78 passed 111 tests and Ruff on Python 3.11, 3.12 and 3.13.
+**Status:** Implemented and merged to `main` in PR #7. Main-branch CI run #83 passed 113 tests and Ruff on Python 3.11, 3.12 and 3.13, including full CLI workflow verification.
 
 Deliverables:
 - Package version 0.2.0 and changelog.
