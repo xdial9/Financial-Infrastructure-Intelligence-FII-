@@ -214,6 +214,24 @@ def test_optional_source_skip_downgrades_run_to_partial(
     assert result.source_counts == {"skipped": 1}
 
 
+def test_all_packaged_example_configs_resolve_their_fixtures() -> None:
+    repository_root = Path(__file__).parents[1]
+    config_paths = (
+        repository_root / "config.example.yaml",
+        repository_root / "examples" / "synthetic-demo" / "config.yaml",
+    )
+
+    for config_path in config_paths:
+        config = load_config(config_path)
+        for source_id, settings in config["sources"].items():
+            fixture = settings.get("fixture")
+            if fixture:
+                fixture_path = Path(fixture).expanduser()
+                if not fixture_path.is_absolute():
+                    fixture_path = config_path.parent / fixture_path
+                assert fixture_path.exists(), f"{source_id} fixture does not exist: {fixture_path}"
+
+
 def test_live_source_fails_closed_before_workspace_creation(tmp_path: Path) -> None:
     config_path = tmp_path / "live.yaml"
     workspace = tmp_path / "must-not-exist"

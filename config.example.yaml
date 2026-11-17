@@ -28,13 +28,13 @@ collection:
 sources:
   rdap_domain:
     enabled: true
-    fixture: fixtures/rdap.json
+    fixture: examples/synthetic-demo/fixtures/rdap.json
     domains:
       - "example.invalid"
   ct_logs:
     enabled: true
-    fixture: fixtures/ct.json
+    fixture: examples/synthetic-demo/fixtures/ct.json
   web_surface:
     enabled: true
-    fixture: fixtures/web
+    fixture: examples/synthetic-demo/fixtures/web
     source_url: "https://www.example.invalid/"
