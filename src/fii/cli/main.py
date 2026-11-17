@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -464,7 +465,7 @@ def review(
     config = _validated_config(config_path)
     paths = _workspace_paths(config)
     try:
-        with connect_database(_database_path(paths)) as connection:
+        with closing(connect_database(_database_path(paths))) as connection:
             result = review_relationship(
                 connection,
                 relationship_id=relationship_id,

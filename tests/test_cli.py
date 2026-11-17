@@ -85,3 +85,36 @@ def test_validate_config_reports_invalid_scope(tmp_path: Path) -> None:
 
     assert result.exit_code == 1
     assert "hostname only" in result.output
+
+def test_help_displays_full_operator_workflow() -> None:
+    result = CliRunner().invoke(main, ["--help"])
+
+    assert result.exit_code == 0
+    for command in ("sources", "run", "resume", "status", "report", "review-queue", "review", "backup"):
+        assert command in result.output
+
+
+def test_sources_list_is_read_only_and_shows_disabled_defaults() -> None:
+    result = CliRunner().invoke(main, ["sources", "list"])
+
+    assert result.exit_code == 0
+    assert "ct_live" in result.output
+    assert "rdap_domain" in result.output
+    assert "live approval required" in result.output
+    assert "all sources default to disabled" in result.output
+    assert "ENABLED" not in result.output
+
+
+def test_status_without_database_does_not_create_workspace(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    config_path = tmp_path / "engagement.yaml"
+    write_config(config_path, workspace)
+
+    result = CliRunner().invoke(
+        main,
+        ["status", "--config", str(config_path)],
+    )
+
+    assert result.exit_code == 0
+    assert "No runs yet" in result.output
+    assert not workspace.exists()
