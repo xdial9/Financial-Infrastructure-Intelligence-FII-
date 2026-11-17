@@ -94,18 +94,34 @@ def _canonical_uuid(value: str, label: str) -> uuid.UUID:
     return parsed
 
 
-def _entity_reference_value(entity_type: str, canonical_key: str) -> str:
-    """Return the value portion of a registered deterministic entity key."""
-    if canonical_key.startswith("identifier:"):
-        parts = canonical_key.split(":", 2)
-        if len(parts) == 3:
-            identifier_type, value = parts[1], parts[2]
-            if identifier_type == "api_endpoint_ref" and value.startswith("route:"):
-                return value[len("route:"):]
-            if identifier_type == "documentation_resource_url" and value.startswith("url:"):
-                return value[len("url:"):]
-            return value
-    return canonical_key
+def _entity_matches_value(
+    connection: sqlite3.Connection,
+    entity_id: str,
+    entity_type: str,
+    canonical_key: str,
+    expected: str,
+) -> bool:
+    """Compare a fact with entity identifiers, not internal key prefixes."""
+    values: set[str] = set()
+    for row in connection.execute(
+        "SELECT identifier_type, identifier_value FROM entity_identifier WHERE entity_id=?",
+        (entity_id,),
+    ).fetchall():
+        identifier_type = row["identifier_type"]
+        value = row["identifier_value"]
+        if identifier_type == "api_endpoint_ref" and value.startswith("route:"):
+            value = value[len("route:"):]
+        elif identifier_type == "documentation_resource_url" and value.startswith("url:"):
+            value = value[len("url:"):]
+        values.add(value.casefold())
+    if not values:
+        if canonical_key.startswith("identifier:"):
+            parts = canonical_key.split(":", 2)
+            if len(parts) == 3:
+                values.add(parts[2].casefold())
+        else:
+            values.add(canonical_key.casefold())
+    return expected.casefold() in values
 
 
 def _load_rule(connection: sqlite3.Connection, rule_id: str) -> sqlite3.Row:
@@ -225,11 +241,14 @@ def propose_relationship(
 
                 if rule["rule_id"] == "domain_has_nameserver":
                     parent_domain = attributes.get("domain")
-                    value_matches = (
-                        observation["observed_value"].casefold()
-                        == _entity_reference_value(object_entity["entity_type"], object_entity["canonical_key"]).casefold()
+                    value_matches = _entity_matches_value(
+                        connection, proposal.object_entity_id, object_entity["entity_type"],
+                        object_entity["canonical_key"], observation["observed_value"]
                     )
-                    if parent_domain != _entity_reference_value("domain", subject["canonical_key"]):
+                    if not _entity_matches_value(
+                            connection, proposal.subject_entity_id, subject["entity_type"],
+                            subject["canonical_key"], parent_domain or ""
+                        ):
                         raise RelationshipError(
                             "RDAP nameserver evidence does not match the proposed subject domain."
                         )

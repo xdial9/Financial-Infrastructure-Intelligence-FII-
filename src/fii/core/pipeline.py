@@ -388,10 +388,12 @@ def _entity_seed(
         entity_type = "vendor"
     elif observation_type == "api_endpoint":
         entity_type = "api_endpoint"
+        identifiers = (EntityIdentifier("api_endpoint_ref", f"route:{value}"),)
     elif observation_type in {
         "api_documentation_reference", "javascript_asset", "source_map_reference"
     }:
         entity_type = "documentation_resource"
+        identifiers = (EntityIdentifier("documentation_resource_url", f"url:{value}"),)
 
     if entity_type is None:
         return None
@@ -403,6 +405,25 @@ def _entity_seed(
         identifiers=identifiers,
         attributes=attributes,
     )
+
+
+def _find_domain_entity(connection: sqlite3.Connection, host: str) -> sqlite3.Row | None:
+    """Find the most-specific in-scope registered domain containing a source host."""
+    normalized_host = host.strip().lower().rstrip(".")
+    candidates = connection.execute(
+        """
+        SELECT e.entity_id, i.identifier_value
+        FROM entity e
+        JOIN entity_identifier i ON i.entity_id=e.entity_id
+        WHERE e.entity_type='domain' AND i.identifier_type='domain'
+        ORDER BY length(i.identifier_value) DESC, i.identifier_value
+        """
+    ).fetchall()
+    for candidate in candidates:
+        domain = candidate["identifier_value"]
+        if normalized_host == domain or normalized_host.endswith("." + domain):
+            return candidate
+    return None
 
 
 def _resolve_entities_and_relationships(
@@ -447,15 +468,7 @@ def _resolve_entities_and_relationships(
         if row["observation_type"] == "rdap_nameserver":
             domain = attributes.get("domain")
             if isinstance(domain, str):
-                subject = connection.execute(
-                    """
-                    SELECT e.entity_id FROM entity e
-                    JOIN entity_identifier i ON i.entity_id=e.entity_id
-                    WHERE e.entity_type='domain' AND i.identifier_type='domain'
-                      AND i.identifier_value=? ORDER BY e.entity_id LIMIT 1
-                    """,
-                    (domain.lower(),),
-                ).fetchone()
+                subject = _find_domain_entity(connection, domain)
                 if subject:
                     relationship_spec = (
                         "domain_has_nameserver", subject["entity_id"], entity_id
@@ -466,15 +479,7 @@ def _resolve_entities_and_relationships(
             source_url = row["source_url"] or ""
             host = urlsplit(source_url).hostname if source_url else None
             if host:
-                subject = connection.execute(
-                    """
-                    SELECT e.entity_id FROM entity e
-                    JOIN entity_identifier i ON i.entity_id=e.entity_id
-                    WHERE e.entity_type='domain' AND i.identifier_type='domain'
-                      AND i.identifier_value=? ORDER BY e.entity_id LIMIT 1
-                    """,
-                    (host.lower(),),
-                ).fetchone()
+                subject = _find_domain_entity(connection, host)
                 rule_id = {
                     "integration_reference": "website_references_vendor",
                     "api_endpoint": "website_references_api_endpoint",
