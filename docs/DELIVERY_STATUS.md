@@ -33,7 +33,7 @@ No login, credential/session capture, customer account/payment data, exploitatio
 
 - The 105-test baseline passed on Python 3.11, 3.12 and 3.13 with Ruff.
 - Subsequent CLI tests increased the suite to 108 tests; those tests passed on all three versions. The associated CI run was blocked only by a single Ruff line-length violation in the test itself, corrected in a later commit.
-- The latest branch head must complete its GitHub Actions run with all Python versions and Ruff passing before the integration PR is merged.
+- GitHub Actions run #74 on the v0.2.0 commit passed: 111 tests on Python 3.11, 3.12 and 3.13; Ruff passed on all three. The latest hardening and documentation commits are being revalidated before the integration PR is merged.
 
 ## Release gates
 
