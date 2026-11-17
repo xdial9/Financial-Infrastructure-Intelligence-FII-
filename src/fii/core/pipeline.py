@@ -323,6 +323,11 @@ def _insert_stage_attempt(
                 input_digest, started_at, finished_at, output_manifest_path,
                 error_summary
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(run_id, stage_id, attempt_number) DO UPDATE SET
+                status=excluded.status,
+                finished_at=excluded.finished_at,
+                output_manifest_path=excluded.output_manifest_path,
+                error_summary=excluded.error_summary
             """,
             (
                 attempt_id, run_id, stage_id, attempt_number, status, input_digest,
