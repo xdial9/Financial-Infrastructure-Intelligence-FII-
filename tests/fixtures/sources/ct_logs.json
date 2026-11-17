@@ -1,0 +1,21 @@
+{
+  "source_url": "https://ct-fixture.example.invalid/search",
+  "records": [
+    {
+      "id": "synthetic-ct-001",
+      "common_name": "api.example.invalid",
+      "name_value": "api.example.invalid\nlogin.example.invalid\noutside.invalid",
+      "issuer_name": "Synthetic Test CA",
+      "not_before": "2026-01-01T00:00:00Z",
+      "not_after": "2027-01-01T00:00:00Z"
+    },
+    {
+      "id": "synthetic-ct-002",
+      "common_name": "api.example.invalid",
+      "name_value": "api.example.invalid",
+      "issuer_name": "Synthetic Test CA",
+      "not_before": "2026-02-01T00:00:00Z",
+      "not_after": "2027-02-01T00:00:00Z"
+    }
+  ]
+}

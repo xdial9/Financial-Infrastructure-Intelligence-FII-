@@ -1,0 +1,40 @@
+# Offline synthetic FII workflow. All inputs are local fixtures.
+workspace: ~/FII-Workspace
+
+engagement:
+  name: "Synthetic Financial Institution"
+  slug: "synthetic-financial-institution"
+  organization: "Example Financial Group"
+  authorization_reference: "SYNTHETIC-LAB"
+
+scope:
+  seed_domains:
+    - "example.invalid"
+  approved_organizations:
+    - "Example Financial Group"
+  permitted_source_classes:
+    - "public_api"
+    - "targeted_public_web"
+  allow_active_validation: false
+
+collection:
+  sequential: true
+  request_timeout_seconds: 20
+  max_retries: 0
+  retry_backoff_seconds: 0.1
+  user_agent: "FII-Synthetic-Demo/1.0"
+  live_collection_approved: false
+
+sources:
+  rdap_domain:
+    enabled: true
+    fixture: fixtures/rdap.json
+    domains:
+      - "example.invalid"
+  ct_logs:
+    enabled: true
+    fixture: fixtures/ct.json
+  web_surface:
+    enabled: true
+    fixture: fixtures/web
+    source_url: "https://www.example.invalid/"

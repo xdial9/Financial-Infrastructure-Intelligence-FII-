@@ -37,6 +37,10 @@ DEFAULTS: dict[str, Any] = {
         "max_retries": 3,
         "retry_backoff_seconds": 2.0,
         "user_agent": "FII-Research/0.1",
+        "live_collection_approved": False,
+        "max_response_bytes": 2097152,
+        "max_linked_assets": 20,
+        "minimum_request_interval_seconds": 1.0,
     },
     "sources": {},
 }
@@ -55,6 +59,10 @@ ALLOWED_COLLECTION_KEYS = {
     "max_retries",
     "retry_backoff_seconds",
     "user_agent",
+    "live_collection_approved",
+    "max_response_bytes",
+    "max_linked_assets",
+    "minimum_request_interval_seconds",
 }
 ALLOWED_SOURCE_CLASSES = {
     "public_api",
@@ -213,6 +221,40 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     user_agent = collection.get("user_agent", "")
     if not isinstance(user_agent, str) or not user_agent.strip():
         raise ConfigError("'collection.user_agent' must be a non-empty string.")
+    live_approved = collection.get("live_collection_approved", False)
+    if not isinstance(live_approved, bool):
+        raise ConfigError("'collection.live_collection_approved' must be true or false.")
+    max_response_bytes = collection.get("max_response_bytes", 2 * 1024 * 1024)
+    max_linked_assets = collection.get("max_linked_assets", 20)
+    request_interval = collection.get("minimum_request_interval_seconds", 1.0)
+    if (
+        isinstance(max_response_bytes, bool)
+        or not isinstance(max_response_bytes, int)
+        or not 1024 <= max_response_bytes <= 20 * 1024 * 1024
+    ):
+        raise ConfigError(
+            "'collection.max_response_bytes' must be an integer from 1024 to 20971520."
+        )
+    if (
+        isinstance(max_linked_assets, bool)
+        or not isinstance(max_linked_assets, int)
+        or not 0 <= max_linked_assets <= 100
+    ):
+        raise ConfigError(
+            "'collection.max_linked_assets' must be an integer from 0 to 100."
+        )
+    if (
+        isinstance(request_interval, bool)
+        or not isinstance(request_interval, (int, float))
+        or not 0 <= request_interval <= 60
+    ):
+        raise ConfigError(
+            "'collection.minimum_request_interval_seconds' must be between 0 and 60."
+        )
+    collection["live_collection_approved"] = live_approved
+    collection["max_response_bytes"] = max_response_bytes
+    collection["max_linked_assets"] = max_linked_assets
+    collection["minimum_request_interval_seconds"] = float(request_interval)
     collection["sequential"] = True
     collection["request_timeout_seconds"] = timeout
     collection["max_retries"] = retries

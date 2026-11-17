@@ -1,201 +1,95 @@
-# FII Sequential Work Blocks
 
-**Purpose:** Deliver the project in bounded, reportable blocks.  
-**Method:** Complete one block's defined deliverables and exit criteria, report what changed, then begin the next block.  
-**No hidden/background work:** Each block is executed in the active work session and ends with a factual completion report.
-
-## Block reporting format
-
-At the end of every block, report:
-- Objective and scope of the block.
-- Files created or changed.
-- GitHub commits and links.
-- Airtable records updated.
-- Tests executed and actual results.
-- Decisions made and reasons.
-- Deferred work and blockers.
-- Exact next block.
-
-Do not claim a task is complete unless its acceptance criteria were checked.
-
-## Block 01 — Blueprint completion
-
-**Status:** Completed in Work Block 01.
-
-Deliverables:
-- Target architecture.
-- Canonical data model.
-- Sequential pipeline contracts.
-- Source register and integration order.
-- Report specification.
-- CLI and operations specification.
-- Ordered implementation blocks.
-- Airtable work-block tracking.
-
-Exit criteria:
-- A developer can understand the product boundary, execution order, storage model, source integration contracts and first implementation slice without inventing missing architecture.
-
-## Block 02 — Package skeleton and CLI foundation
-
-**Status:** Completed in Work Block 02.
-
-Deliverables:
-- `pyproject.toml` with runtime/development dependencies and package metadata.
-- `src/fii/` package and Click CLI.
-- `fii doctor`, version and help output.
-- Thin `automate.py` entry point if useful.
-- Ruff and pytest configuration.
-
-Exit criteria:
-- The package installed editable locally using the available build tooling.
-- `fii --help`, `fii --version` and `fii doctor` were smoke-tested.
-- Three offline CLI tests passed.
-- `doctor` did not create missing config/workspace directories.
-
-## Block 03 — Configuration, engagement scope and workspace
-
-Deliverables:
-- YAML defaults and validation.
-- Engagement profile loading.
-- Domain/identifier normalization.
-- Explicit source and scope review.
-- Workspace creation and path containment.
-- Safe directory/file permissions.
-- Example synthetic configuration.
-
-Exit criteria:
-- Valid synthetic config loads.
-- Invalid/malformed scope is rejected before any source operation.
-- Existing files are preserved.
-
-## Block 04 — Run controller, manifests, locking and recovery
-
-Deliverables:
-- Run UUID and immutable effective config snapshot.
-- Stage/source attempt history.
-- Workspace interprocess lock.
-- Atomic state writes.
-- Resume fingerprints.
-- Ctrl+C and timeout behavior.
-- Reconciliation command.
-
-Exit criteria:
-- A synthetic pipeline can be interrupted and resumed.
-- Completed stages are skipped only when fingerprints match.
-- Existing outputs are not overwritten.
-- Stale running state is detected.
-
-## Block 05 — SQLite evidence store
-
-Deliverables:
-- Numbered schema migrations.
-- Engagement, run, stage, source execution, observation and entity tables.
-- Relationship and finding tables.
-- Database integrity and backup utilities.
-
-Exit criteria:
-- Schema creates from empty workspace.
-- Migrations are idempotent/safely versioned.
-- Foreign keys and key constraints are tested.
-- Persistence failure halts the run.
-
-## Block 06 — Collector contract and first passive data source
-
-Deliverables:
-- SourceDefinition and CollectionResult contracts.
-- Fixed source registry.
-- Fixture-backed CT source adapter.
-- Raw evidence preservation.
-- Source log and failure reporting.
-
-Exit criteria:
-- Fixture-based run works offline.
-- One approved live query can be run manually after source terms/limits are checked.
-- Raw response, timestamp, hash and source identity are preserved.
-
-## Block 07 — RDAP and official-source enrichment
-
-Deliverables:
-- RDAP adapter.
-- One official corporate or regulatory source adapter.
-- Source coverage/limitations recorded.
-- Normalized observation conversion.
-
-Exit criteria:
-- Two source families can contribute evidence without losing provenance.
-- Missing/redacted source fields are handled correctly.
-
-## Block 08 — Normalization, deduplication and entity resolution
-
-Deliverables:
-- Canonical observation schema.
-- Deduplication key and provenance merge rules.
-- Entity types and identifier registry.
-- Deterministic entity resolution.
-
-Exit criteria:
-- The same observation from two sources produces one canonical fact with two source references.
-- Similar-looking entities are not merged without a rule/evidence.
 
 ## Block 09 — Relationship correlation and analyst review
 
-Deliverables:
-- Typed relationship predicates.
-- Evidence links.
-- Explainable rules and confidence rationale.
-- Inferred/observed distinctions.
-- Analyst disposition workflow.
-
-Exit criteria:
-- Every relationship has evidence links.
-- Every inference is explicitly marked.
-- Contradictory evidence is retained rather than overwritten.
-
-## Block 10 — Report generation
+**Status:** CI-verified on draft [PR #6](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/6) / branch `build/block-09-relationship-correlation-analyst-review`, stacked on Block 08. Final code head: `757f6e363e46778ee84e8836517547aacff1195e`. GitHub Actions [run #52](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/actions/runs/43138667923) passed: Python 3.11, 3.12 and 3.13 each reported **102 tests passed** and Ruff **All checks passed!** No local test result is claimed.
 
 Deliverables:
-- Executive Markdown report.
-- Technical Markdown report.
-- Asset inventory CSV.
-- Entities and relationships exports.
-- Observation JSONL.
-- Source register and analyst review exports.
-- Report manifest.
+- Versioned SQLite migration 0003 with a fixed relationship-rule registry and append-only analyst review history.
+- Typed relationship rules for RDAP nameserver observations, static vendor references, static API route references and API documentation references.
+- Evidence-linked relationship proposals with supporting, contradicting and context roles; deterministic IDs make repeated identical proposals idempotent without collapsing distinct evidence assertions.
+- Endpoint-type, run-scope, observation-type, endpoint-anchor and source/value consistency checks.
+- Corroboration requires supporting observations from at least two distinct source definitions. Contradicting evidence is retained and prevents automatic corroboration.
+- Deterministic rule confidence scores and explicit rationale; scores are heuristic, not probabilities.
+- Analyst dispositions accepted/rejected/needs_research with reviewer label, rationale, timestamp and prior/resulting state. Acceptance does not upgrade evidence state; rejection marks the assertion rejected; review history cannot be updated or deleted.
+- Synthetic offline SQLite tests; no active requests, JavaScript execution, API invocation, or real institution/provider contact.
 
 Exit criteria:
-- A synthetic dataset produces a complete report package.
-- Every claim can be traced to evidence.
-- Partial collection is clearly disclosed.
+- Each persisted relationship has at least one supporting evidence link and may also retain contradictory/context evidence.
+- Only registered predicates/rules and matching entity types/observation types can be used.
+- Two executions from the same source definition do not count as independent corroboration.
+- Two distinct source definitions may corroborate an observed rule only when no contradicting evidence exists.
+- Contradictions remain visible and prevent corroboration.
+- Analyst review is auditable and cannot silently promote confidence or erase evidence.
+- CI passes on the final PR head before Block 09 is complete.
 
-## Block 11 — Historical comparison and source expansion
+## Block 10 — Sequential pipeline integration
+
+**Status:** Implemented and CI-verified in integration PR #7.
 
 Deliverables:
-- Run-to-run observation comparison.
-- Added/removed/changed records.
-- Optional Censys/passive DNS/Subfinder/Amass integrations selected by measured value.
-- Scrapy for selected public-source extraction only where necessary.
-- SpiderFoot integration evaluation, not assumed inclusion.
+- Fixed source registry preflight, source-class and engagement-scope enforcement.
+- Per-source/per-query stage fingerprints, attempt persistence and resume checkpoints.
+- Raw evidence and source result manifests persisted under the private run directory.
+- Source execution history and canonical observations/provenance persisted in SQLite.
+- Existing entity resolution and relationship correlation invoked after collection.
+- Required/optional/skipped/partial/failed source outcomes reflected in final run status.
+- Workspace lock acquired before SQLite initialization and writes.
+- Resume rejects any changed effective configuration or scope digest.
 
-Exit criteria:
-- Source expansion shows distinct incremental value.
-- Source gaps are not mislabeled as asset removal.
-- All integrations respect their terms and configured scope.
+## Block 11 — Findings and reproducible reports
 
-## Block 12 — Reliability, packaging and pilot release
+**Status:** Implemented and CI-verified in integration PR #7.
 
 Deliverables:
-- Full offline integration tests.
-- Subprocess failure/timeout tests.
-- Install and operator documentation.
-- Versioned output schema.
-- Synthetic demonstration report.
-- Pilot checklist for explicitly authorized scopes.
+- Deterministic informational research findings backed by observation evidence.
+- Executive and technical Markdown reports.
+- Asset inventory, entities, relationships, observations, source register, analyst review, historical changes and finding exports.
+- Report manifest with artifact SHA-256 hashes, run metadata, baseline and limitations.
+- Raw evidence containment/symlink/digest verification before report publication.
+- CSV formula-prefix neutralization and atomic private report writes.
+- Historical observations absent from the new run are labelled `not_observed`, never as confirmed asset removal.
 
-Exit criteria:
-- A new operator can install, configure, run, resume, reconcile and report without developer intervention.
-- One complete synthetic run meets the report specification.
-- No application secrets or customer data are present in the repository.
+## Block 12 — Operator workflow and recovery
 
-## Priority rule
+**Status:** Implemented and CI-verified in integration PR #7.
 
-If a later feature delays the first complete evidence-to-report workflow, defer that feature. The first product milestone is one small, reproducible pipeline that creates a trustworthy report, not the largest possible collector catalog.
+Commands:
+- `fii sources list`
+- `fii run`
+- `fii resume`
+- `fii status`
+- `fii report`
+- `fii review-queue`
+- `fii review`
+- `fii backup`
+
+Resume requires the original configuration/scope digests. Unexpected exceptions and process interruption preserve recoverable state. Database initialization and mutation are serialized by an engagement-level lock. Backups use SQLite's backup API, integrity checks and no-overwrite publication.
+
+## Block 13 — Synthetic reference engagement and handoff docs
+
+**Status:** Implemented and CI-verified in integration PR #7.
+
+Deliverables:
+- Ready-to-run local RDAP, CT fixture and static website fixture set for `example.invalid`.
+- Reproducible sample engagement configuration at `examples/synthetic-demo/config.yaml`.
+- Operator quick start, command guide, data/workspace layout, report interpretation and troubleshooting.
+- No live target, institution or third-party service is queried in CI.
+
+## Block 14 — Hardening, packaging and v0.2.0
+
+**Status:** Implemented; CI green at the v0.2.0 integration commit. Later safety/recovery changes are being revalidated.
+
+Deliverables:
+- Package version 0.2.0 and changelog.
+- Python 3.11–3.13 CI plus Ruff.
+- Synthetic coverage for source preflight, end-to-end persistence, report integrity, resume digest checks and CLI workflow.
+- Live/public collection remains disabled by default and requires explicit global and per-source opt-in plus authorization reference.
+
+## Block 15 — Authorized pilot and source-specific expansion
+
+**Status:** Deliberately not executed.
+
+This is not a code-only milestone and cannot be truthfully completed using synthetic fixtures. It requires a real engagement scope, written authorization, source terms/licensing review, privacy and retention review, and the customer's designated operator. No live pilot, production source coverage or customer dataset ingestion is claimed.
+
+Optional future source work should be selected by market/jurisdiction and incremental evidence value. Additional passive-DNS providers, Censys/other external tools, regulatory registers, broader public disclosure sources, internal CMDB/customer inventories, graph UI, dashboard and distributed execution remain optional and are not required to run the offline MVP.

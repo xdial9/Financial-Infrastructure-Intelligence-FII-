@@ -140,3 +140,65 @@ The final run summary must include run ID, engagement, timestamps, status, sourc
 - no stage marked successful is missing its output manifest.
 
 The reconciler reports inconsistencies; it never silently rewrites evidence or changes an error into success.
+
+## 11. Collector interface and evidence semantics
+
+A collector is a fixed, versioned adapter implementing one operation:
+
+```python
+definition: SourceDefinition
+collect(context: CollectionContext) -> CollectionResult
+```
+
+The context carries the run ID, approved seed domains, approved organization-name/LEI seeds, optional fixture location, raw-evidence directory, source URL and bounded input-size settings. The result carries source status, timestamps, received/accepted counters, immutable raw-evidence references, typed observations and sanitized diagnostics.
+
+Collector rules:
+- Sources run sequentially. A collector cannot start another collector or a later pipeline stage.
+- Every observation references a raw-evidence SHA-256 and records its source URL, collection time and detection metadata.
+- Collectors report observed facts. Static API routes, authentication markers and provider references must not be promoted into verified relationships by the collector.
+- The fixed registry is explicit. Future provider APIs and external-tool adapters implement the same contract; arbitrary runtime plugin loading is not part of the MVP.
+- Website HTML/JavaScript analysis is static text analysis. The fixture adapter does not execute scripts or fetch script/source-map references.
+- Likely credential values are redacted from saved web text. The retained evidence SHA-256 and original input digest are both recorded; no secret value belongs in an observation, log or database row.
+- Source parsing/unavailability errors produce failed or partial source results. Failure to write or safely reference raw evidence is a fatal persistence error and must propagate to the run controller.
+- Raw evidence paths are private, content-addressed, relative to the run's raw directory and never overwrite an existing file.
+
+- Live public-source retrieval is disabled by default. A caller must explicitly set `live_collection_approved=True` after source-specific terms, licensing, robots policy, limits and engagement scope have been reviewed.
+- The shared HTTP helper permits HTTPS GET only, sends no cookies or authorization headers, refuses redirects, applies explicit timeout/response-size limits, and reports HTTP 429/Retry-After without automatic retries.
+- The crt.live adapter makes one request for one approved seed domain and one page per invocation; it does not paginate or retry. Names outside the approved domain/subdomain are not retained.
+- The public website snapshot adapter retrieves one approved HTTPS HTML page and a bounded number of same-scope JavaScript assets. It does not retrieve unapproved CDN assets, source maps, links or discovered API endpoints. All fetched JavaScript is parsed as text, never executed.
+- Test suites mock the HTTP layer. CI must not contact real providers, websites or institutions.
+
+
+### Block 07 enrichment adapters
+
+- rdap_domain accepts exactly one approved seed domain. The live adapter retrieves IANA's DNS RDAP bootstrap JSON, selects the longest matching domain suffix per RFC 9224, then retrieves one domain object from the selected HTTPS service. It does not follow redirects, paginate or retry. Only registry status, event dates, nameserver names and registrar identity are retained. Registrant/admin/technical contact and vCard details are excluded.
+- gleif_lei accepts exactly one approved organization name or 20-character LEI. Name-search results remain candidate matches. It retrieves one API page (default 10 records; adapter maximum 50) and does not auto-paginate or follow relationship links. Legal-entity identity and registration fields are emitted as observations; relationship identifiers remain source-reported references, not inferred relationships.
+- GLEIF records may contain independent entity-status and LEI-registration-status values; preserve both. Missing optional data and redacted fields are omitted. A missing field is not evidence that the field's real-world value is absent.
+- Both adapters retain content-addressed raw evidence with source-response digests and source URLs. RDAP response evidence is minimized to public infrastructure fields; GLEIF response evidence is minimized to legal-entity reference fields. No contact data is required for these enrichment goals.
+- All live network requests require live_collection_approved=True. Tests use synthetic fixtures and mocked HTTP responses only.
+
+
+### Block 08 normalization, deduplication and entity resolution
+
+- Normalize source observations using a versioned, deterministic canonicalization contract. Preserve source values in provenance and source raw evidence; store canonical fact values and stable comparison keys.
+- Deduplication keys include observation type, canonical value, source event timestamp when present and semantic scope attributes. Volatile query/provider metadata and transport URLs are not key material. Subject/scope discriminators (for example, parent domain and LEI) prevent unrelated observations from collapsing.
+- One canonical fact stores one primary source row and retains every distinct source execution in \`observation_source_link\` plus each source-object hash/path/URL/timestamp/attributes in \`observation_provenance\`. Secondary source links begin as context. Do not automatically set verification_state=corroborated merely because deduplication found a second source.
+- Contradictory values remain separate canonical observations. Deduplication never chooses a winner or overwrites a source observation.
+- Entity and identifier types are drawn from the fixed, versioned registry. Strong identifiers resolve only the registry-matched entity type; weak name/brand/package identifiers create candidate references.
+- Similar names never auto-merge. Exact legal-name matches are still candidates, with jurisdiction and source rationale. Conflicting exact identifiers create a conflict decision and leave existing subject assignments unchanged.
+- Domain/hostname/IP/ASN identities are infrastructure entities; shared infrastructure is not evidence that two organizations are the same entity.
+- Entity-resolution decisions persist rule/version, source observation, outcome and rationale. Candidate links are separately persisted for analyst review in Block 09.
+- These operations are deterministic and offline. They make no network requests and do not alter raw source evidence.
+
+
+## 12. Relationship correlation and analyst review (Block 09)
+
+Relationship proposals use a fixed, versioned rule registry. Each rule constrains its predicate, subject/object entity types, permitted observation type and evidence semantics. Rules validate endpoint identity against source observations; unsupported or unanchored evidence is rejected.
+
+Every persisted relationship has at least one supporting observation. Evidence roles are supports, contradicts or context. Contradictions are retained as separate evidence links and force an observed assertion to remain unverified rather than selecting a winning source.
+
+Corroboration requires support from at least two distinct source definitions, not simply two source executions, and is not assigned when contradictory evidence is present. A confidence score is a deterministic heuristic associated with the rule and evidence counts; it is not a statistical probability. Rationale must state the evidence basis and limits.
+
+Static website references to vendors, API routes and API documentation are observations about public code/text. They do not prove an active vendor integration, reachable/functional endpoint, account validation capability, or authentication success. FII never invokes discovered routes or executes JavaScript to validate these relationships.
+
+Analyst dispositions (accepted, rejected, needs_research) are append-only, require reviewer label and rationale, and preserve prior/resulting evidence state. Acceptance does not upgrade an observed/inferred relationship to corroborated or verified. Rejection marks the relationship rejected; needs_research remains in the queue. Entity merging is not part of this stage.

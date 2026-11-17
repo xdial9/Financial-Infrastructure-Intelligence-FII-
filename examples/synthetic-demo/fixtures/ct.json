@@ -1,0 +1,12 @@
+{
+  "source_url": "https://ct.example.invalid/synthetic",
+  "records": [
+    {
+      "id": "synthetic-ct-01",
+      "name_value": "api.example.invalid\nlogin.example.invalid",
+      "issuer_name": "Synthetic Test CA",
+      "not_before": "2026-01-01T00:00:00Z",
+      "not_after": "2027-01-01T00:00:00Z"
+    }
+  ]
+}

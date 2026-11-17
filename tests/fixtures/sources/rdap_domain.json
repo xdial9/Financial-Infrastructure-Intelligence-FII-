@@ -1,0 +1,48 @@
+{
+  "bootstrap": {
+    "version": "1.0",
+    "publication": "2026-11-01T00:00:00Z",
+    "services": [
+      [["uk"], ["https://rdap.example.test/uk/"]],
+      [["co.uk"], ["http://rdap.example.test/insecure/", "https://rdap.example.test/co-uk/"]]
+    ]
+  },
+  "domain_response": {
+    "objectClassName": "domain",
+    "handle": "D-EXAMPLE-123",
+    "ldhName": "bank.example.co.uk",
+    "unicodeName": "bank.example.co.uk",
+    "status": ["active", "client transfer prohibited"],
+    "events": [
+      {"eventAction": "registration", "eventDate": "2020-02-03T00:00:00Z"},
+      {"eventAction": "expiration", "eventDate": "2027-02-03T00:00:00Z"}
+    ],
+    "nameservers": [
+      {"ldhName": "ns1.provider.example"},
+      {"ldhName": "ns2.provider.example"},
+      {"ldhName": "invalid name"}
+    ],
+    "entities": [
+      {
+        "handle": "REG-123",
+        "roles": ["registrar"],
+        "publicIds": [{"type": "IANA Registrar ID", "identifier": "9999"}],
+        "vcardArray": ["vcard", [
+          ["version", {}, "text", "4.0"],
+          ["fn", {}, "text", "Example Registrar Ltd"],
+          ["org", {}, "text", "Example Registrar Ltd"],
+          ["email", {}, "text", "registrar@example.test"]
+        ]]
+      },
+      {
+        "handle": "PERSON-1",
+        "roles": ["registrant"],
+        "vcardArray": ["vcard", [
+          ["version", {}, "text", "4.0"],
+          ["fn", {}, "text", "Private Person"],
+          ["email", {}, "text", "private.person@example.test"]
+        ]]
+      }
+    ]
+  }
+}
