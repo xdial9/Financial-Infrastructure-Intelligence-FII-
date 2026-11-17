@@ -627,6 +627,51 @@ def execute_pipeline(
     active_registry = registry or get_default_registry()
     path = Path(config_path).expanduser().resolve()
     settings = _settings(config, active_registry)
+    source_defs = {definition.source_id: definition for definition in active_registry.definitions()}
+    enabled = {
+        source_id: source_settings
+        for source_id, source_settings in settings.items()
+        if source_settings.get("enabled", False)
+    }
+    permitted_classes = set(config["scope"]["permitted_source_classes"])
+    planned_invocations: dict[str, tuple[dict[str, Any], ...]] = {}
+    for source_id, source_settings in enabled.items():
+        definition = source_defs[source_id]
+        if definition.source_class not in permitted_classes:
+            raise PipelineError(
+                f"Source {source_id} has class {definition.source_class!r}, "
+                "which is not permitted by this engagement."
+            )
+
+        fixture = source_settings.get("fixture")
+        fixture_required = source_id in {"ct_logs", "web_surface"}
+        if fixture_required and not fixture:
+            raise PipelineError(
+                f"Source {source_id} is fixture-only and requires sources.{source_id}.fixture."
+            )
+
+        live_required = source_id in {"ct_live", "website_public"} or (
+            source_id in {"rdap_domain", "gleif_lei"} and not fixture
+        )
+        if live_required:
+            globally_approved = config["collection"].get("live_collection_approved", False)
+            if not (
+                globally_approved
+                and source_settings.get("live_approved", False)
+                and config["engagement"].get("authorization_reference")
+            ):
+                raise PipelineError(
+                    f"Live source {source_id} requires collection.live_collection_approved, "
+                    f"sources.{source_id}.live_approved and a written authorization_reference."
+                )
+
+        invocations = _invocations(source_id, source_settings, config)
+        if not invocations:
+            raise PipelineError(
+                f"Source {source_id} is enabled but no approved query was configured."
+            )
+        planned_invocations[source_id] = invocations
+
     workspace = prepare_workspace(config)
     database_path = workspace.database / DATABASE_NAME
     initialize_database(database_path)
@@ -649,32 +694,6 @@ def execute_pipeline(
     os.chmod(raw_directory, 0o700)
 
     source_outcomes: list[tuple[str, str]] = []
-    source_defs = {definition.source_id: definition for definition in active_registry.definitions()}
-    enabled = {
-        source_id: source_settings
-        for source_id, source_settings in settings.items()
-        if source_settings.get("enabled", False)
-    }
-    permitted_classes = set(config["scope"]["permitted_source_classes"])
-    for source_id, source_settings in enabled.items():
-        definition = source_defs[source_id]
-        if definition.source_class not in permitted_classes:
-            raise PipelineError(
-                f"Source {source_id} has class {definition.source_class!r}, "
-                "which is not permitted by this engagement."
-            )
-        if source_id in {"ct_live", "website_public"} and not source_settings.get("fixture"):
-            globally_approved = config["collection"].get("live_collection_approved", False)
-            if not (
-                globally_approved
-                and source_settings.get("live_approved", False)
-                and config["engagement"].get("authorization_reference")
-            ):
-                raise PipelineError(
-                    f"Live source {source_id} requires collection.live_collection_approved, "
-                    "sources.{source_id}.live_approved and a written authorization_reference."
-                )
-
     db = connect_database(database_path)
     try:
         with WorkspaceLock(workspace.engagement):
@@ -697,11 +716,7 @@ def execute_pipeline(
                     continue
                 definition = source_defs[source_id]
                 fixture = _fixture_path(source_settings.get("fixture"), path)
-                invocations = _invocations(source_id, source_settings, config)
-                if not invocations:
-                    raise PipelineError(
-                        f"Source {source_id} is enabled but no approved query was configured."
-                    )
+                invocations = planned_invocations[source_id]
 
                 for index, invocation in enumerate(invocations, start=1):
                     stage_id = f"collect_{source_id}_{index}"
