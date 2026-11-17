@@ -78,6 +78,16 @@ def _sha256(value: Any) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
 
 
+def configuration_digest(config: dict[str, Any]) -> str:
+    """Hash a configuration after removing secret values."""
+    return _sha256(_sanitize_config(config))
+
+
+def scope_digest(scope: dict[str, Any]) -> str:
+    """Hash the normalized engagement scope."""
+    return _sha256(_sanitize_config(scope))
+
+
 def _sanitize_config(value: Any) -> Any:
     """Redact common credential fields before config snapshots or hashes."""
     if isinstance(value, dict):
@@ -221,8 +231,8 @@ def create_run(
     )
 
     sanitized_config = _sanitize_config(config)
-    config_digest = _sha256(sanitized_config)
-    scope_digest = _sha256(_sanitize_config(scope))
+    config_digest = configuration_digest(config)
+    scope_digest_value = scope_digest(scope)
     created_at = _utc_now()
 
     manifest = {
@@ -237,7 +247,7 @@ def create_run(
         "implementation_version": implementation_version,
         "config_snapshot": "config/effective-config.json",
         "config_sha256": config_digest,
-        "scope_sha256": scope_digest,
+        "scope_sha256": scope_digest_value,
         "collection_mode": "sequential",
         "active_validation": False,
     }

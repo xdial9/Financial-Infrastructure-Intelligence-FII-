@@ -17,12 +17,14 @@ from fii.core.run_controller import (
     RunError,
     WorkspaceLock,
     begin_stage,
+    configuration_digest,
     create_run,
     finalize_run,
     finish_stage,
     make_stage_fingerprint,
     open_run,
     reconcile_interrupted_stages,
+    scope_digest,
 )
 from fii.core.workspace import WorkspacePaths, prepare_workspace
 from fii.normalization.entities import (
@@ -701,7 +703,6 @@ def execute_pipeline(
 
     workspace = prepare_workspace(config)
     database_path = workspace.database / DATABASE_NAME
-    initialize_database(database_path)
 
     run_paths = (
         open_run(workspace, resume_run_id)
@@ -713,6 +714,17 @@ def execute_pipeline(
     config_digest = manifest["config_sha256"]
     scope_digest = manifest["scope_sha256"]
     state = json.loads(run_paths.state.read_text(encoding="utf-8"))
+    if resume_run_id:
+        if configuration_digest(config) != config_digest:
+            raise PipelineError(
+                "Resume refused because the effective engagement configuration changed. "
+                "Use the original config or start a new run."
+            )
+        if scope_digest(config["scope"]) != manifest["scope_sha256"]:
+            raise PipelineError(
+                "Resume refused because engagement scope changed. Start a new run."
+            )
+    initialize_database(database_path)
     if state.get("status") in {"completed", "partial", "failed", "cancelled"}:
         raise PipelineError(f"Run {run_id} is terminal ({state['status']}) and cannot be resumed.")
 
