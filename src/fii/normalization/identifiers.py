@@ -114,6 +114,14 @@ IDENTIFIER_TYPE_DEFINITIONS = MappingProxyType(
                 "package_id", "application", "Ecosystem-scoped package identifier.",
                 "namespaced_text", "weak"
             ),
+            IdentifierTypeDefinition(
+                "api_endpoint_ref", "api_endpoint", "Static API route and method reference.",
+                "namespaced_text", "strong"
+            ),
+            IdentifierTypeDefinition(
+                "documentation_resource_url", "documentation_resource",
+                "Public documentation or asset URL reference.", "namespaced_text", "strong"
+            ),
         )
     }
 )

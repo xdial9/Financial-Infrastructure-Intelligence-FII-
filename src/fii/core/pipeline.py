@@ -23,7 +23,7 @@ from fii.core.run_controller import (
     open_run,
     reconcile_interrupted_stages,
 )
-from fii.core.workspace import WorkspacePaths, prepare_workspace
+from fii.core.workspace import WorkspaceLock, WorkspacePaths, prepare_workspace
 from fii.normalization.entities import (
     EntityIdentifier,
     EntitySeed,
@@ -643,7 +643,7 @@ def execute_pipeline(
     raw_directory.mkdir(mode=0o700, exist_ok=True)
     os.chmod(raw_directory, 0o700)
 
-    source_outcomes: list[str] = []
+    source_outcomes: list[tuple[str, str]] = []
     source_defs = {definition.source_id: definition for definition in active_registry.definitions()}
     enabled = {
         source_id: source_settings
@@ -687,30 +687,6 @@ def execute_pipeline(
                         (run_id,),
                     )
 
-            for source_id, definition in source_defs.items():
-                source_settings = settings.get(source_id, {})
-                if source_settings.get("enabled", False):
-                    continue
-                exists = db.execute(
-                    "SELECT 1 FROM source_execution WHERE run_id=? AND source_id=?",
-                    (run_id, source_id),
-                ).fetchone()
-                if exists is None:
-                    timestamp = _now()
-                    _source_execution(
-                        db,
-                        run_id=run_id,
-                        source_id=source_id,
-                        attempt_number=1,
-                        status="skipped",
-                        started_at=timestamp,
-                        finished_at=timestamp,
-                        configuration_digest=_digest({"enabled": False}),
-                        error_code="source_disabled",
-                        error_summary="Source is registered but not enabled for this engagement.",
-                    )
-                source_outcomes.append("skipped")
-
             for source_id, source_settings in settings.items():
                 if not source_settings.get("enabled", False):
                     continue
@@ -718,9 +694,9 @@ def execute_pipeline(
                 fixture = _fixture_path(source_settings.get("fixture"), path)
                 invocations = _invocations(source_id, source_settings, config)
                 if not invocations:
-                    invocations = ({},)
-                    if definition.requires_credentials:
-                        raise PipelineError(f"Source {source_id} has no configured query.")
+                    raise PipelineError(
+                        f"Source {source_id} is enabled but no approved query was configured."
+                    )
 
                 for index, invocation in enumerate(invocations, start=1):
                     stage_id = f"collect_{source_id}_{index}"
@@ -740,7 +716,7 @@ def execute_pipeline(
                     )
                     decision = begin_stage(run_paths, stage_id, fingerprint)
                     if not decision.should_run:
-                        source_outcomes.append("success")
+                        source_outcomes.append((source_id, "success"))
                         continue
 
                     attempt_started = _now()
@@ -824,7 +800,7 @@ def execute_pipeline(
                             )
                         deduplicated = deduplicate_observations(envelopes)
                         persist_canonical_observations(db, deduplicated.observations)
-                        source_outcomes.append(result.status)
+                        source_outcomes.append((source_id, result.status))
                         stage_status = "success" if result.status == "success" else "partial"
                         finish_stage(
                             run_paths, stage_id, stage_status,
@@ -858,9 +834,16 @@ def execute_pipeline(
                 config_digest=config_digest,
                 scope_digest=scope_digest,
                 input_manifest_digest=_digest({
-                    "observation_count": db.execute(
+                    "observations": db.execute(
                         "SELECT COUNT(*) FROM observation WHERE run_id=?", (run_id,)
-                    ).fetchone()[0]
+                    ).fetchone()[0],
+                    "source_executions": [
+                        tuple(row) for row in db.execute(
+                            "SELECT source_id, attempt_number, status, configuration_digest "
+                            "FROM source_execution WHERE run_id=? ORDER BY source_id, attempt_number",
+                            (run_id,),
+                        ).fetchall()
+                    ],
                 }),
             )
             analysis_decision = begin_stage(run_paths, analysis_stage_id, analysis_fingerprint)
@@ -897,11 +880,7 @@ def execute_pipeline(
             required_failures = any(
                 settings.get(source_id, {}).get("required", False)
                 and outcome in {"failed", "partial", "skipped"}
-                for source_id, outcome in zip(
-                    [source_id for source_id, s in settings.items() if s.get("enabled", False)],
-                    source_outcomes,
-                    strict=False,
-                )
+                for source_id, outcome in source_outcomes
             )
             executed_enabled = len(enabled)
             success_count = counts.get("success", 0)
@@ -910,7 +889,7 @@ def execute_pipeline(
                 status = "partial"
             elif failed_count and success_count == 0:
                 status = "failed"
-            elif failed_count or counts.get("skipped", 0) or required_failures:
+            elif failed_count or required_failures:
                 status = "partial"
             else:
                 status = "completed"

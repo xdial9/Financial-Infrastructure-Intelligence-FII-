@@ -94,6 +94,20 @@ def _canonical_uuid(value: str, label: str) -> uuid.UUID:
     return parsed
 
 
+def _entity_reference_value(entity_type: str, canonical_key: str) -> str:
+    """Return the value portion of a registered deterministic entity key."""
+    if canonical_key.startswith("identifier:"):
+        parts = canonical_key.split(":", 2)
+        if len(parts) == 3:
+            identifier_type, value = parts[1], parts[2]
+            if identifier_type == "api_endpoint_ref" and value.startswith("route:"):
+                return value[len("route:"):]
+            if identifier_type == "documentation_resource_url" and value.startswith("url:"):
+                return value[len("url:"):]
+            return value
+    return canonical_key
+
+
 def _load_rule(connection: sqlite3.Connection, rule_id: str) -> sqlite3.Row:
     row = connection.execute(
         "SELECT * FROM relationship_rule_registry WHERE rule_id = ?", (rule_id,)
@@ -213,9 +227,9 @@ def propose_relationship(
                     parent_domain = attributes.get("domain")
                     value_matches = (
                         observation["observed_value"].casefold()
-                        == object_entity["canonical_key"].casefold()
+                        == _entity_reference_value(object_entity["entity_type"], object_entity["canonical_key"]).casefold()
                     )
-                    if parent_domain != subject["canonical_key"]:
+                    if parent_domain != _entity_reference_value("domain", subject["canonical_key"]):
                         raise RelationshipError(
                             "RDAP nameserver evidence does not match the proposed subject domain."
                         )
