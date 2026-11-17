@@ -389,7 +389,7 @@ def _counts(rows: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def _executive_summary(
-    run: sqlite3.Row, source_counts: dict[str, int], counts: dict[str, int],
+    run: sqlite3.Row, source_counts: dict[str, int],
     observation_count: int, entity_count: int, relationship_count: int,
     finding_count: int, baseline: str | None,
 ) -> str:
@@ -630,7 +630,7 @@ def render_reports(
                 finding_export,
             ),
             "executive-summary.md": _executive_summary(
-                run, source_counts, source_counts, len(observations), len(entities),
+                run, source_counts, len(observations), len(entities),
                 len(relationships), len(findings), baseline,
             ).encode("utf-8"),
             "technical-report.md": _technical_report(

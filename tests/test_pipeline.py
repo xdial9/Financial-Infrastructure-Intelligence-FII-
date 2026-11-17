@@ -10,6 +10,7 @@ import pytest
 
 from fii.core.config import load_config
 from fii.core.pipeline import PipelineError, execute_pipeline
+from fii.reporting import render_reports
 
 
 def _write_synthetic_configuration(tmp_path: Path, *, live: bool = False) -> Path:
@@ -135,6 +136,15 @@ def test_offline_pipeline_persists_evidence_and_correlates_entities(tmp_path: Pa
         ).fetchone()[0] == 1
     finally:
         connection.close()
+
+    report = render_reports(result.database_path, result.run_id, result.run_directory)
+    assert len(report.files) == 11
+    assert all(path.is_file() for path in report.files)
+    manifest = json.loads((report.directory / "report-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["run_id"] == result.run_id
+    assert manifest["counts"]["observations"] == result.observation_count
+    assert manifest["verified_raw_evidence_files"]
+    assert all(report.sha256[path.name] for path in report.files)
 
 
 def test_live_source_fails_closed_before_workspace_creation(tmp_path: Path) -> None:

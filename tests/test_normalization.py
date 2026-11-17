@@ -176,7 +176,7 @@ def test_registry_is_installed_idempotently(tmp_path: Path) -> None:
             "SELECT COUNT(*) FROM identifier_type_registry"
         ).fetchone()[0]
         assert entity_types == 10
-        assert identifier_types == 11
+        assert identifier_types == 13
     finally:
         connection.close()
 
