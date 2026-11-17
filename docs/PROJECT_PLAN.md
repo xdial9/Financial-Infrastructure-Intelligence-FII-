@@ -4,7 +4,7 @@
 **Repository:** xdial9/Financial-Infrastructure-Intelligence-FII-  
 **Default branch:** main  
 **Project type:** Python command-line intelligence collector and analyzer  
-**Planning status:** Initial blueprint completed; offline end-to-end implementation delivered on `build/finish-line-integration` and integrated CI/review is tracked in PR #7. See [DELIVERY_STATUS.md](DELIVERY_STATUS.md) for current validation and remaining authorized-pilot gates.  
+**Planning status:** Offline end-to-end implementation merged to `main` via PR #7 (merge commit `c83ea1692ff9e4841e8a75f59549254a91271853`); the 111-test CI suite and Ruff pass on Python 3.11–3.13. Remaining work is the operator workstation smoke test and an engagement-authorized live pilot. See [DELIVERY_STATUS.md](DELIVERY_STATUS.md).  
 **Reference implementation style:** attached `automate.py` (University Audit)
 
 ---

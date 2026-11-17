@@ -78,7 +78,7 @@ Deliverables:
 
 ## Block 14 — Hardening, packaging and v0.2.0
 
-**Status:** Implemented; CI green at the v0.2.0 integration commit. Later safety/recovery changes are being revalidated.
+**Status:** Implemented and merged to `main` in PR #7. Post-merge CI run #78 passed 111 tests and Ruff on Python 3.11, 3.12 and 3.13.
 
 Deliverables:
 - Package version 0.2.0 and changelog.

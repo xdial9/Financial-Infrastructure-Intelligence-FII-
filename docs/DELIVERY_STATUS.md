@@ -1,12 +1,12 @@
 # FII Delivery Status
 
 **Snapshot:** 2026-11-17  
-**Integration branch:** build/finish-line-integration  
+**Merged to:** `main` at `c83ea1692ff9e4841e8a75f59549254a91271853`  
 **Integration PR:** [#7 — Complete FII pipeline, reporting and operator workflow](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/7)
 
 ## Delivery summary
 
-The integration branch assembles the Blocks 04–09 development foundation and adds the missing execution, evidence-to-analysis, report and operator layers. It is based on the latest Block09 relationship-correlation implementation rather than the older minimal main branch. Existing stacked PRs remain historical work; the complete integrated path is being validated in PR #7.
+The integrated delivery assembles the Blocks 04–09 development foundation with the new execution, evidence-to-analysis, report and operator layers. It was merged to `main` via [PR #7](https://github.com/xdial9/Financial-Infrastructure-Intelligence-FII-/pull/7) at merge commit `c83ea1692ff9e4841e8a75f59549254a91271853`. The old stacked PRs #2–#6 are closed as superseded; PR #1 is included in the merged history.
 
 ## Implemented stages
 
@@ -33,16 +33,16 @@ No login, credential/session capture, customer account/payment data, exploitatio
 
 - The 105-test baseline passed on Python 3.11, 3.12 and 3.13 with Ruff.
 - Subsequent CLI tests increased the suite to 108 tests; those tests passed on all three versions. The associated CI run was blocked only by a single Ruff line-length violation in the test itself, corrected in a later commit.
-- GitHub Actions run #74 on the v0.2.0 commit passed: 111 tests on Python 3.11, 3.12 and 3.13; Ruff passed on all three. The latest hardening and documentation commits are being revalidated before the integration PR is merged.
+- GitHub Actions run #77 on the final PR head passed: 111 tests on Python 3.11, 3.12 and 3.13; Ruff passed on all three.
+- Post-merge main-branch run #78 on merge commit `c83ea1692ff9e4841e8a75f59549254a91271853` also passed: 111 tests and Ruff on Python 3.11, 3.12 and 3.13.
 
 ## Release gates
 
-1. Obtain a fully green CI run on the final PR #7 head.
-2. Review the PR as one coherent integration; do not merge the stacked blocks individually out of order.
-3. Run the documented synthetic workflow on an operator workstation.
-4. Review database backup, restore, report contents and retention policy.
-5. Before live collection, document written authorization and complete source-specific terms/licensing/rate-limit review.
-6. Merge the integration PR and tag the tested release after all gates pass.
+1. Run the documented synthetic workflow on an operator workstation and verify the generated package locally.
+2. Review database backup/restore, report contents and the engagement's evidence retention policy.
+3. Publish the `v0.2.0` Git tag/release after the operator smoke test; the version and changelog are already committed.
+4. Before any live collection, document written authorization and complete source-specific terms/licensing/privacy/rate-limit review.
+5. Select jurisdiction-specific official financial/regulatory sources based on the target engagement; no all-jurisdiction source coverage is claimed.
 
 ## Outside this delivery
 
