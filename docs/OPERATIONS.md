@@ -61,7 +61,7 @@ Resume with the same engagement config because the config digest participates in
 
     <workspace>/engagements/<slug>/
       database/fii.sqlite3
-      database/.workspace.lock
+      .workspace.lock
       runs/<run-uuid>/
         config/effective-config.json
         evidence/

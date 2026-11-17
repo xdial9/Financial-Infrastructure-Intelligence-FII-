@@ -98,7 +98,7 @@ Raw evidence is checked against its database SHA-256 before publication. Missing
     ~/FII-Workspace/
       engagements/<slug>/
         database/fii.sqlite3
-        database/.workspace.lock
+        .workspace.lock
         runs/<run-uuid>/
           config/effective-config.json
           evidence/
