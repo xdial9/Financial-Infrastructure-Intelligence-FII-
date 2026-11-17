@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import yaml
 from click.testing import CliRunner
 
 from fii import __version__
@@ -121,3 +122,41 @@ def test_status_without_database_does_not_create_workspace(tmp_path: Path) -> No
     assert result.exit_code == 0
     assert "No runs yet" in result.output
     assert not workspace.exists()
+
+def test_cli_executes_full_synthetic_run_status_report_and_backup(tmp_path: Path) -> None:
+    demo_path = Path(__file__).parents[1] / "examples" / "synthetic-demo" / "config.yaml"
+    config = yaml.safe_load(demo_path.read_text(encoding="utf-8"))
+    config["workspace"] = str(tmp_path / "workspace")
+    for source_settings in config["sources"].values():
+        fixture = source_settings.get("fixture")
+        if fixture:
+            source_settings["fixture"] = str((demo_path.parent / fixture).resolve())
+    config_path = tmp_path / "engagement.yaml"
+    config_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+
+    runner = CliRunner()
+    run_result = runner.invoke(main, ["run", "--config", str(config_path)])
+    assert run_result.exit_code == 0, run_result.output
+    run_line = next(line for line in run_result.output.splitlines() if line.startswith("Run ID: "))
+    run_id = run_line.removeprefix("Run ID: ").strip()
+    assert "Status: completed" in run_result.output
+    assert "executive-summary.md" in run_result.output
+
+    status_result = runner.invoke(main, ["status", "--config", str(config_path), "--run-id", run_id])
+    assert status_result.exit_code == 0, status_result.output
+    assert run_id in status_result.output
+    assert "completed" in status_result.output
+
+    report_result = runner.invoke(main, ["report", "--config", str(config_path), "--run-id", run_id])
+    assert report_result.exit_code == 0, report_result.output
+    assert "report-manifest.json" in report_result.output
+
+    backup_path = tmp_path / "backups" / "fii.sqlite3"
+    backup_path.parent.mkdir()
+    backup_result = runner.invoke(
+        main,
+        ["backup", "--config", str(config_path), "--destination", str(backup_path)],
+    )
+    assert backup_result.exit_code == 0, backup_result.output
+    assert backup_path.is_file()
+
