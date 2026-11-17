@@ -1,0 +1,32 @@
+{
+  "bootstrap": {
+    "version": "1.0",
+    "publication": "2026-11-01T00:00:00Z",
+    "services": [
+      [
+        [
+          "invalid"
+        ],
+        [
+          "https://rdap.example.test/"
+        ]
+      ]
+    ]
+  },
+  "domain_response": {
+    "objectClassName": "domain",
+    "handle": "SYNTHETIC-DOMAIN-1",
+    "ldhName": "example.invalid",
+    "status": [
+      "active"
+    ],
+    "events": [],
+    "nameservers": [
+      {
+        "ldhName": "ns1.example.invalid"
+      }
+    ],
+    "entities": []
+  },
+  "source_url": "https://rdap.example.test/domain/example.invalid"
+}

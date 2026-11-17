@@ -1,173 +1,108 @@
-# FII Operations and CLI Specification
+# FII Operations and CLI
 
-**Status:** Proposed operator experience. Commands become authoritative when implemented.
+**Status:** Implemented in the integration branch, with offline end-to-end coverage.
 
-## 1. Operator experience
+## 1. Recommended operator sequence
 
-The default task should be simple:
+    fii doctor
+    fii validate-config --config engagement.yaml
+    fii sources list --config engagement.yaml
+    fii init --config engagement.yaml
+    fii run --config engagement.yaml
+    fii status --config engagement.yaml
 
-```bash
-fii doctor
-fii validate-config --config config.example.yaml
-fii init --config config.example.yaml
-fii run --config config.example.yaml
-```
+The run command validates config and source scope, creates a UUID run, executes explicitly enabled sources sequentially, persists observations and provenance, resolves entities, correlates relationships, generates informational findings, finalizes run state and publishes reports.
 
-The run command validates configuration and scope, shows the selected source plan, then executes the sequential workflow. The operator should not have to manually invoke every collector.
+## 2. Commands
 
-## 2. Proposed commands
-
-| Command | Purpose |
+| Command | Behavior |
 |---|---|
-| `fii --version` | Display application version |
-| `fii doctor` | Check Python, configuration, SQLite and configured source prerequisites |
-| `fii init --config FILE` | Initialize the engagement workspace from a validated configuration |
-| `fii sources list` | Show available collectors, requirements and current configuration |
-| `fii validate-config --config FILE` | Validate a config and display its normalized scope (read-only) |
-| `fii run --config FILE` | Execute complete workflow sequentially |
-| `fii status --run-id ID` | Summarize run and stage states |
-| `fii resume --run-id ID` | Resume eligible incomplete work |
-| `fii report --run-id ID` | Rebuild reports from stored evidence |
-| `fii reconcile --run-id ID` | Verify manifests, source runs, evidence and reports |
+| fii --version | Display package version |
+| fii doctor | Read-only Python, SQLite, config and workspace checks |
+| fii validate-config --config FILE | Validate config and normalized domain scope |
+| fii init --config FILE | Prepare workspace without replacing files |
+| fii sources list [--config FILE] | Display fixed source catalogue and enablement |
+| fii run --config FILE | Execute enabled sources and publish reports |
+| fii resume --config FILE --run-id UUID | Resume unfinished stages of an interrupted run |
+| fii status --config FILE [--run-id UUID] [--limit N] | Read run state from SQLite |
+| fii report --config FILE --run-id UUID | Regenerate reports and validate raw evidence |
+| fii review-queue --config FILE [--limit N] | Read unresolved relationship proposals |
+| fii review --config FILE ... | Append analyst disposition to review history |
+| fii backup --config FILE --destination PATH | Integrity-checked, no-overwrite database backup |
 
-The implementation should not expose unnecessary subcommands. The primary user path remains `doctor`, then `run`, then `report/status`.
+Analyst review requires relationship UUID, disposition, reviewer label and rationale. The accepted disposition does not increase confidence or mark the relationship independently corroborated. Rejection records a rejected state. Every decision is appended to immutable review history.
 
-## 3. Configuration locations
+## 3. Synthetic engagement
 
-Global application configuration:
-`~/.config/fii/config.yaml`
+The executable example is examples/synthetic-demo/config.yaml. Fixture paths are resolved relative to that YAML file. It uses synthetic .invalid names and local files only.
 
-Engagement configuration:
-`<workspace>/engagements/<slug>/engagement.yaml`
+The configuration enables RDAP, Certificate Transparency and static website analysis in fixture mode. All network collection flags remain false.
 
-Default workspace:
-`~/FII-Workspace/`
+## 4. Live-source authorization gate
 
-The actual path is configurable. Do not put customer data or API credentials in the Git checkout.
+Each network-capable adapter requires all three conditions:
+1. collection.live_collection_approved: true.
+2. sources.<source_id>.live_approved: true.
+3. A non-empty engagement.authorization_reference.
 
-## 4. Engagement configuration example
+The adapter must also belong to the engagement's permitted source classes. Fixture-only collectors reject configurations without a fixture. Preflight checks happen before workspace or database creation.
 
-```yaml
-engagement:
-  name: "Synthetic Financial Institution"
-  slug: "synthetic-financial-institution"
-  organization: "Example Financial Group"
-  authorization_reference: "SYNTHETIC-LAB"
+These flags are an operator assertion; FII does not independently establish legal permission. Before enabling a public source, review source terms, licensing, robots policy, rate limits and applicable privacy requirements. No authentication cookies or customer credentials are used. JavaScript is not executed and discovered routes are not invoked.
 
-scope:
-  seed_domains:
-    - "example.invalid"
-  approved_organizations:
-    - "Example Financial Group"
-  permitted_source_classes:
-    - "public_api"
-    - "public_dataset"
-    - "targeted_public_web"
-  allow_active_validation: false
+## 5. Run, resume and status
 
-collection:
-  sequential: true
-  request_timeout_seconds: 20
-  max_retries: 3
-  retry_backoff_seconds: 2
-  user_agent: "FII-Research/0.1 (contact: operator-configured)"
+Each run receives a UUID, immutable redacted config snapshot and config/scope digests. Each source invocation and analysis stage has a fingerprinted attempt record. A completed stage is skipped on resume only if its fingerprint matches. Failed or interrupted stages are never inferred to have succeeded.
 
-sources:
-  ct_logs:
-    enabled: true
-    required: true
-  rdap:
-    enabled: true
-    required: false
-  official_corporate_web:
-    enabled: false
-    required: false
-```
+Unexpected process exceptions mark the run interrupted so it remains eligible for resume. Explicit collector outcomes of partial or failed are recorded as source execution results; after all sources have been considered the overall run is finalized partial or failed as appropriate. Completed, partial and failed runs are terminal; run again after correcting inputs to preserve the audit trail.
 
-The `.invalid` domain is reserved for documentation and synthetic examples; it is not a real target.
+Resume with the same engagement config because the config digest participates in stage fingerprints. Never manually edit a run state file to mark unfinished work successful.
 
-## 5. Secrets
+## 6. Workspace and evidence reports
 
-- Use environment variables or an OS-protected secret store.
-- Never commit API keys, tokens, passwords or customer access material.
-- Never place secret values in logs, command-line output, run manifests or report exports.
-- Configuration digests must be computed from a sanitized representation with secret values removed.
-- Record only whether a credential is configured, not its value.
+    <workspace>/engagements/<slug>/
+      database/fii.sqlite3
+      database/.workspace.lock
+      runs/<run-uuid>/
+        config/effective-config.json
+        evidence/
+        source-results/
+        state/run.json
+        manifest.json
+        reports/
 
-## 6. Workspace layout
+SQLite is canonical. Each observation retains source URL, relative evidence path and SHA-256. The report builder refuses to publish if evidence is missing, escapes the run directory, is a symlink or has a mismatched digest. Report artifact digests and limitations are recorded in report-manifest.json. CSV exports neutralize spreadsheet formula prefixes.
 
-```
-~/FII-Workspace/
-  engagements/
-    <engagement-slug>/
-      engagement.yaml
-      database/
-        fii.sqlite3
-        .workspace.lock
-        migrations/
-      runs/
-        <run-id>/
-          config/
-            effective-config.json
-          raw/
-            <source-id>/
-          normalized/
-          analysis/
-          reports/
-          logs/
-          state/
-            run.json
-            stage-state.json
-            source-state.json
-            manifest.json
-```
+Historical change exports compare canonical observation keys to the immediately previous completed/partial run. A not_observed record is not evidence that an asset was removed.
 
-Each run is immutable after finalization, except for explicitly versioned analyst review/disposition events. New runs never overwrite old run directories.
+## 7. Permissions, privacy and source handling
 
-## 7. Permissions and privacy
+- Keep workspace data outside the Git checkout.
+- Use private accounts and encrypted storage appropriate to the engagement.
+- Never commit customer datasets, raw evidence, databases, local configs or secrets.
+- Do not collect credentials, session tokens, customer account records, payment details or unnecessary personal data.
+- Keep customer-provided internal data separate from public-source observations; define retention/deletion policies before ingestion.
+- Collection is sequential; no distributed queue or concurrent source run is required.
+- No exploitation, unscoped active scan, authentication, account action or transaction testing is performed.
 
-- Create private workspace directories with restrictive permissions (target 0700 for directories, 0600 for sensitive files where supported).
-- Do not store unnecessary personal data.
-- Do not collect credentials, session cookies, authentication tokens, payment data or customer account records.
-- Separate public-source evidence from customer-provided internal datasets.
-- Define retention and deletion policies before any customer data ingestion.
-- Do not commit run output, raw data, database files, local configs or secrets to Git.
+## 8. Operational recovery
 
-## 8. External tool execution
+If a process exits unexpectedly:
+1. Run fii status and record the run UUID.
+2. Inspect the run state and source result manifests.
+3. Run fii resume with the same config and UUID.
+4. Re-run fii report if report publication was interrupted after collection.
 
-For any external tool:
-- resolve a known executable;
-- check its version and required capabilities;
-- invoke via an argument list;
-- never use `shell=True`;
-- capture stdout/stderr to a source-specific log;
-- set timeout and maximum output constraints;
-- record exact tool version and sanitized argument metadata;
-- mark unavailable tools as skipped or failed according to required/optional configuration.
+If SQLite reports a persistence or integrity error, preserve the database and run directory, create a verified backup when possible, and investigate before retrying.
 
-## 9. Operator-facing messages
+## 9. Backup and restore
 
-Progress messages should be concise and consistent:
+The backup command uses SQLite's backup API, checks database integrity and publishes without overwriting an existing file. Its destination parent directory must already exist. Manage backups under the engagement retention policy; the database contains all evidence metadata.
 
-```text
-FII — Financial Infrastructure Intelligence
-Engagement: Synthetic Financial Institution
-Run: <run-id>
-Scope: validated
-Sources: 3 enabled (1 required)
+## 10. Synthetic smoke test
 
-[1/3] CT Logs ............ COMPLETE (42 records)
-[2/3] RDAP ............... PARTIAL  (8 records, 1 lookup unavailable)
-[3/3] Corporate Sources . SKIPPED  (disabled)
+    python -m pip install -e ".[dev]"
+    fii validate-config --config examples/synthetic-demo/config.yaml
+    fii run --config examples/synthetic-demo/config.yaml
+    fii status --config examples/synthetic-demo/config.yaml
 
-Normalization ........... COMPLETE
-Entity resolution ....... COMPLETE
-Correlation ............. COMPLETE
-Reporting ............... COMPLETE
-
-Run status: PARTIAL
-Reports: .../reports/
-Logs: .../logs/
-```
-
-Never use alarming severity language for an unverified relationship or ordinary asset discovery.
+CI uses temporary workspaces and synthetic local fixtures; no live external requests are part of the test run.
