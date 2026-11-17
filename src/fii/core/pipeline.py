@@ -24,7 +24,7 @@ from fii.core.run_controller import (
     make_stage_fingerprint,
     open_run,
     reconcile_interrupted_stages,
-    scope_digest,
+    scope_digest as compute_scope_digest,
 )
 from fii.core.workspace import WorkspacePaths, prepare_workspace
 from fii.normalization.entities import (
@@ -720,7 +720,7 @@ def execute_pipeline(
                 "Resume refused because the effective engagement configuration changed. "
                 "Use the original config or start a new run."
             )
-        if scope_digest(config["scope"]) != manifest["scope_sha256"]:
+        if compute_scope_digest(config["scope"]) != manifest["scope_sha256"]:
             raise PipelineError(
                 "Resume refused because engagement scope changed. Start a new run."
             )
