@@ -266,9 +266,12 @@ def propose_relationship(
                     "website_references_api_endpoint",
                     "website_references_api_documentation",
                 }:
-                    value_matches = (
-                        observation["observed_value"].casefold()
-                        == object_entity["canonical_key"].casefold()
+                    value_matches = _entity_matches_value(
+                        connection,
+                        proposal.object_entity_id,
+                        object_entity["entity_type"],
+                        object_entity["canonical_key"],
+                        observation["observed_value"],
                     )
                     if role == "supports" and not value_matches:
                         raise RelationshipError(
