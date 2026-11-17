@@ -998,10 +998,10 @@ def execute_pipeline(
         try:
             state_now = json.loads(run_paths.state.read_text(encoding="utf-8"))
             if state_now.get("status") not in {"completed", "partial", "failed", "cancelled"}:
-                finalize_run(run_paths, "failed")
+                finalize_run(run_paths, "interrupted")
             with transaction(db, immediate=True):
                 db.execute(
-                    "UPDATE run SET status='failed', finished_at=? WHERE run_id=?",
+                    "UPDATE run SET status='interrupted', finished_at=? WHERE run_id=?",
                     (_now(), run_id),
                 )
         except Exception:
