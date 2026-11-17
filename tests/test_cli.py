@@ -142,12 +142,16 @@ def test_cli_executes_full_synthetic_run_status_report_and_backup(tmp_path: Path
     assert "Status: completed" in run_result.output
     assert "executive-summary.md" in run_result.output
 
-    status_result = runner.invoke(main, ["status", "--config", str(config_path), "--run-id", run_id])
+    status_result = runner.invoke(
+        main, ["status", "--config", str(config_path), "--run-id", run_id]
+    )
     assert status_result.exit_code == 0, status_result.output
     assert run_id in status_result.output
     assert "completed" in status_result.output
 
-    report_result = runner.invoke(main, ["report", "--config", str(config_path), "--run-id", run_id])
+    report_result = runner.invoke(
+        main, ["report", "--config", str(config_path), "--run-id", run_id]
+    )
     assert report_result.exit_code == 0, report_result.output
     assert "report-manifest.json" in report_result.output
 
