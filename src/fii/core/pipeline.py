@@ -903,9 +903,11 @@ def execute_pipeline(
                         "SELECT COUNT(*) FROM observation WHERE run_id=?", (run_id,)
                     ).fetchone()[0],
                     "source_executions": [
-                        tuple(row) for row in db.execute(
+                        tuple(row)
+                        for row in db.execute(
                             "SELECT source_id, attempt_number, status, configuration_digest "
-                            "FROM source_execution WHERE run_id=? ORDER BY source_id, attempt_number",
+                            "FROM source_execution WHERE run_id=? "
+                            "ORDER BY source_id, attempt_number",
                             (run_id,),
                         ).fetchall()
                     ],
@@ -917,9 +919,14 @@ def execute_pipeline(
             if analysis_decision.should_run:
                 analysis_started = _now()
                 _insert_stage_attempt(
-                    db, run_id=run_id, stage_id=analysis_stage_id,
-                    attempt_number=analysis_decision.attempt, status="running",
-                    started_at=analysis_started, finished_at=None, input_digest=analysis_fingerprint,
+                    db,
+                    run_id=run_id,
+                    stage_id=analysis_stage_id,
+                    attempt_number=analysis_decision.attempt,
+                    status="running",
+                    started_at=analysis_started,
+                    finished_at=None,
+                    input_digest=analysis_fingerprint,
                 )
                 try:
                     register_entity_registry(db)
@@ -927,16 +934,26 @@ def execute_pipeline(
                     _create_findings(db, run_id)
                     finish_stage(run_paths, analysis_stage_id, "success")
                     _insert_stage_attempt(
-                        db, run_id=run_id, stage_id=analysis_stage_id,
-                        attempt_number=analysis_decision.attempt, status="success",
-                        started_at=analysis_started, finished_at=_now(), input_digest=analysis_fingerprint,
+                        db,
+                        run_id=run_id,
+                        stage_id=analysis_stage_id,
+                        attempt_number=analysis_decision.attempt,
+                        status="success",
+                        started_at=analysis_started,
+                        finished_at=_now(),
+                        input_digest=analysis_fingerprint,
                     )
                 except BaseException as exc:
                     finish_stage(run_paths, analysis_stage_id, "failed", error=str(exc)[:500])
                     _insert_stage_attempt(
-                        db, run_id=run_id, stage_id=analysis_stage_id,
-                        attempt_number=analysis_decision.attempt, status="failed",
-                        started_at=analysis_started, finished_at=_now(), input_digest=analysis_fingerprint,
+                        db,
+                        run_id=run_id,
+                        stage_id=analysis_stage_id,
+                        attempt_number=analysis_decision.attempt,
+                        status="failed",
+                        started_at=analysis_started,
+                        finished_at=_now(),
+                        input_digest=analysis_fingerprint,
                         error_summary=str(exc)[:500],
                     )
                     raise

@@ -375,7 +375,10 @@ def _changes(
         rows.append({
             "change_type": "not_observed", **item, "previous_run_id": previous_id,
             "current_run_id": run_id,
-            "note": "Not present in this run; absence does not prove the external asset was removed.",
+            "note": (
+                "Not present in this run; absence does not prove "
+                "the external asset was removed."
+            ),
         })
     return previous_id, rows
 
@@ -420,8 +423,14 @@ def _executive_summary(
         "",
         "- Only sources explicitly enabled in the engagement configuration were executed.",
         "- Per-source results and coverage limitations are listed in source-register.csv.",
-        "- Static browser-delivered strings were analyzed without executing JavaScript or invoking routes.",
-        "- Nameserver and Certificate Transparency observations are third-party records, not ownership proof.",
+        (
+            "- Static browser-delivered strings were analyzed without executing JavaScript "
+            "or invoking routes."
+        ),
+        (
+            "- Nameserver and Certificate Transparency observations are third-party records, "
+            "not ownership proof."
+        ),
         "- Findings remain informational research candidates until independently reviewed.",
         "",
         "## Recommended next steps",
