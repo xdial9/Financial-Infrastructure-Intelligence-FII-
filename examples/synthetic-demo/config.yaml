@@ -21,7 +21,7 @@ collection:
   sequential: true
   request_timeout_seconds: 20
   max_retries: 0
-  retry_backoff_seconds: 0
+  retry_backoff_seconds: 0.1
   user_agent: "FII-Synthetic-Demo/1.0"
   live_collection_approved: false
 
