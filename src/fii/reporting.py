@@ -513,9 +513,11 @@ def _technical_report(
         "",
         "## 10. Evidence package",
         "",
-        "See observations.jsonl, entities.json, relationships.csv, findings.csv, source-register.csv "
-        "and report-manifest.json. Raw evidence remains under the run's private evidence directory "
-        "and is cited by relative path and SHA-256.",
+        (
+            "See observations.jsonl, entities.json, relationships.csv, findings.csv, "
+            "source-register.csv and report-manifest.json. Raw evidence remains under the "
+            "run's private evidence directory and is cited by relative path and SHA-256."
+        ),
         "",
     ])
 
@@ -592,41 +594,61 @@ def render_reports(
 
         contents: dict[str, bytes] = {
             "asset-inventory.csv": _csv_bytes(
-                ("entity_id", "entity_type", "display_name", "canonical_key", "identifiers", "attributes"),
+                (
+                    "entity_id", "entity_type", "display_name", "canonical_key",
+                    "identifiers", "attributes",
+                ),
                 assets,
             ),
             "entities.json": (
-                json.dumps({"schema_version": REPORT_VERSION, "run_id": run_id, "entities": entities},
-                           ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+                json.dumps(
+                    {"schema_version": REPORT_VERSION, "run_id": run_id, "entities": entities},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                ) + "\n"
             ).encode("utf-8"),
             "relationships.csv": _csv_bytes(
                 ("relationship_id", "subject_entity_id", "subject_name", "predicate",
                  "object_entity_id", "object_name", "verification_state", "confidence",
-                 "rationale", "rule_id", "rule_version", "first_seen_at", "last_seen_at", "evidence"),
+                 "rationale", "rule_id", "rule_version", "first_seen_at",
+                 "last_seen_at", "evidence"),
                 relationship_rows,
             ),
-            "observations.jsonl": ("\n".join(observation_lines) + ("\n" if observation_lines else "")).encode("utf-8"),
+            "observations.jsonl": (
+                ("\n".join(observation_lines) + ("\n" if observation_lines else ""))
+                .encode("utf-8")
+            ),
             "source-register.csv": _csv_bytes(
                 ("source_id", "name", "adapter_version", "source_class", "documentation_url",
                  "terms_url", "requires_credentials", "default_enabled", "source_execution_id",
-                 "attempt_number", "execution_state", "started_at", "finished_at", "records_received",
+                 "attempt_number", "execution_state", "started_at", "finished_at",
+                 "records_received",
                  "records_accepted", "raw_manifest_path", "error_code", "error_summary"),
                 source_export,
             ),
             "analyst-review.csv": _csv_bytes(
-                ("relationship_id", "subject_name", "predicate", "object_name", "verification_state",
-                 "confidence", "disposition", "reviewer_label", "review_rationale", "reviewed_at",
-                 "relationship_rationale"),
+                (
+                    "relationship_id", "subject_name", "predicate", "object_name",
+                    "verification_state", "confidence", "disposition", "reviewer_label",
+                    "review_rationale", "reviewed_at", "relationship_rationale",
+                ),
                 reviews,
             ),
             "changes.csv": _csv_bytes(
-                ("change_type", "observation_id", "observation_type", "observed_value", "source_url",
-                 "deduplication_key", "previous_run_id", "current_run_id", "note"),
+                (
+                    "change_type", "observation_id", "observation_type", "observed_value",
+                    "source_url", "deduplication_key", "previous_run_id", "current_run_id",
+                    "note",
+                ),
                 changes,
             ),
             "findings.csv": _csv_bytes(
-                ("finding_id", "finding_type", "title", "description", "priority", "confidence",
-                 "verification_state", "disposition", "rationale", "created_at", "updated_at", "evidence"),
+                (
+                    "finding_id", "finding_type", "title", "description", "priority", "confidence",
+                    "verification_state", "disposition", "rationale", "created_at", "updated_at",
+                    "evidence",
+                ),
                 finding_export,
             ),
             "executive-summary.md": _executive_summary(

@@ -41,7 +41,11 @@ from fii.relationships.correlation import (
     RelationshipProposal,
     propose_relationship,
 )
-from fii.sources.contracts import CollectionContext, CollectionResult, run_collector, utc_now
+from fii.sources.contracts import (
+    CollectionContext,
+    CollectionResult,
+    run_collector,
+)
 from fii.sources.registry import SourceRegistry, get_default_registry
 from fii.storage.database import (
     PersistenceError,
@@ -175,7 +179,10 @@ def _invocations(
     source_id: str, settings: dict[str, Any], config: dict[str, Any]
 ) -> tuple[dict[str, Any], ...]:
     if source_id in {"rdap_domain", "ct_live"}:
-        return tuple({"domains": (domain,)} for domain in _selected_domains(source_id, settings, config))
+        return tuple(
+            {"domains": (domain,)}
+            for domain in _selected_domains(source_id, settings, config)
+        )
     if source_id == "gleif_lei":
         names = settings.get("organization_names", [])
         leis = settings.get("legal_entity_identifiers", [])
@@ -382,7 +389,9 @@ def _entity_seed(
         "lei_registration_status", "lei_jurisdiction", "lei_legal_form",
         "gleif_relationship_reference"
     }:
-        lei = attributes.get("lei") or (value if observation_type == "legal_entity_identifier" else None)
+        lei = attributes.get("lei") or (
+            value if observation_type == "legal_entity_identifier" else None
+        )
         if isinstance(lei, str) and len(lei) == 20:
             entity_type = "organization"
             identifiers = (EntityIdentifier("lei", lei),)
@@ -454,7 +463,11 @@ def _resolve_entities_and_relationships(
         except json.JSONDecodeError as exc:
             raise PipelineError("Stored observation attributes are invalid JSON.") from exc
         seed = _entity_seed(
-            run_id, row["observation_id"], row["observation_type"], row["observed_value"], attributes
+            run_id,
+            row["observation_id"],
+            row["observation_type"],
+            row["observed_value"],
+            attributes
         )
         if seed is None:
             continue
@@ -504,7 +517,10 @@ def _resolve_entities_and_relationships(
                     subject_entity_id=subject_id,
                     object_entity_id=object_id,
                     evidence=(RelationshipEvidence(observation_id, "supports"),),
-                    rationale="Derived by the deterministic FII pipeline; source claim remains qualified.",
+                    rationale=(
+                        "Derived by the deterministic FII pipeline; "
+                        "source claim remains qualified."
+                    ),
                 ),
             )
             if relationship.inserted:
@@ -566,7 +582,10 @@ def _create_findings(connection: sqlite3.Connection, run_id: str) -> int:
                 """,
                 (
                     finding_id, run_id, finding_type, title_map[kind], description,
-                    f"Derived from observation {row['observation_id']}; no active validation performed.",
+                    (
+                        f"Derived from observation {row['observation_id']}; "
+                        "no active validation performed."
+                    ),
                     timestamp, timestamp,
                 ),
             )
@@ -586,7 +605,9 @@ def _create_findings(connection: sqlite3.Connection, run_id: str) -> int:
     return count
 
 
-def _run_counts(connection: sqlite3.Connection, run_id: str) -> tuple[dict[str, int], int, int, int, int]:
+def _run_counts(
+    connection: sqlite3.Connection, run_id: str
+) -> tuple[dict[str, int], int, int, int, int]:
     sources = {
         row["status"]: int(row["count"])
         for row in connection.execute(
@@ -756,13 +777,17 @@ def execute_pipeline(
                         run_id=run_id,
                         raw_directory=raw_directory,
                         fixture_path=fixture,
-                        approved_domains=invocation.get("domains", tuple(config["scope"]["seed_domains"])),
+                        approved_domains=invocation.get(
+                            "domains", tuple(config["scope"]["seed_domains"])
+                        ),
                         organization_names=invocation.get("organization_names", ()),
                         legal_entity_identifiers=invocation.get("legal_entity_identifiers", ()),
                         source_url=source_settings.get("source_url"),
                         request_timeout_seconds=config["collection"]["request_timeout_seconds"],
                         user_agent=config["collection"]["user_agent"],
-                        max_response_bytes=config["collection"].get("max_response_bytes", 2 * 1024 * 1024),
+                        max_response_bytes=config["collection"].get(
+                            "max_response_bytes", 2 * 1024 * 1024
+                        ),
                         max_linked_assets=config["collection"].get("max_linked_assets", 20),
                         minimum_request_interval_seconds=config["collection"].get(
                             "minimum_request_interval_seconds", 1.0
@@ -830,13 +855,22 @@ def execute_pipeline(
                         stage_status = "success" if result.status == "success" else "partial"
                         finish_stage(
                             run_paths, stage_id, stage_status,
-                            output_manifest=source_manifest.relative_to(run_paths.directory).as_posix(),
+                            output_manifest=source_manifest.relative_to(
+                                run_paths.directory
+                            ).as_posix(),
                         )
                         _insert_stage_attempt(
-                            db, run_id=run_id, stage_id=stage_id,
-                            attempt_number=decision.attempt, status=stage_status,
-                            started_at=attempt_started, finished_at=_now(), input_digest=fingerprint,
-                            output_manifest_path=source_manifest.relative_to(run_paths.directory).as_posix(),
+                            db,
+                            run_id=run_id,
+                            stage_id=stage_id,
+                            attempt_number=decision.attempt,
+                            status=stage_status,
+                            started_at=attempt_started,
+                            finished_at=_now(),
+                            input_digest=fingerprint,
+                            output_manifest_path=source_manifest.relative_to(
+                                run_paths.directory
+                            ).as_posix(),
                         )
                     except BaseException as exc:
                         try:
@@ -844,9 +878,14 @@ def execute_pipeline(
                         except RunError:
                             pass
                         _insert_stage_attempt(
-                            db, run_id=run_id, stage_id=stage_id,
-                            attempt_number=decision.attempt, status="failed",
-                            started_at=attempt_started, finished_at=_now(), input_digest=fingerprint,
+                            db,
+                            run_id=run_id,
+                            stage_id=stage_id,
+                            attempt_number=decision.attempt,
+                            status="failed",
+                            started_at=attempt_started,
+                            finished_at=_now(),
+                            input_digest=fingerprint,
                             error_summary=str(exc)[:500],
                         )
                         if isinstance(exc, (KeyboardInterrupt, SystemExit)):
@@ -872,7 +911,9 @@ def execute_pipeline(
                     ],
                 }),
             )
-            analysis_decision = begin_stage(run_paths, analysis_stage_id, analysis_fingerprint)
+            analysis_decision = begin_stage(
+                run_paths, analysis_stage_id, analysis_fingerprint
+            )
             if analysis_decision.should_run:
                 analysis_started = _now()
                 _insert_stage_attempt(
@@ -967,6 +1008,8 @@ def execute_pipeline(
             pass
         if isinstance(exc, (PipelineError, PersistenceError, RunError)):
             raise
-        raise PipelineError("The FII pipeline failed; inspect the run state and source diagnostics.") from exc
+        raise PipelineError(
+            "The FII pipeline failed; inspect the run state and source diagnostics."
+        ) from exc
     finally:
         db.close()

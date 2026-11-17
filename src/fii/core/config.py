@@ -227,12 +227,30 @@ def validate_config(raw: dict[str, Any]) -> dict[str, Any]:
     max_response_bytes = collection.get("max_response_bytes", 2 * 1024 * 1024)
     max_linked_assets = collection.get("max_linked_assets", 20)
     request_interval = collection.get("minimum_request_interval_seconds", 1.0)
-    if isinstance(max_response_bytes, bool) or not isinstance(max_response_bytes, int) or not 1024 <= max_response_bytes <= 20 * 1024 * 1024:
-        raise ConfigError("'collection.max_response_bytes' must be an integer from 1024 to 20971520.")
-    if isinstance(max_linked_assets, bool) or not isinstance(max_linked_assets, int) or not 0 <= max_linked_assets <= 100:
-        raise ConfigError("'collection.max_linked_assets' must be an integer from 0 to 100.")
-    if isinstance(request_interval, bool) or not isinstance(request_interval, (int, float)) or not 0 <= request_interval <= 60:
-        raise ConfigError("'collection.minimum_request_interval_seconds' must be between 0 and 60.")
+    if (
+        isinstance(max_response_bytes, bool)
+        or not isinstance(max_response_bytes, int)
+        or not 1024 <= max_response_bytes <= 20 * 1024 * 1024
+    ):
+        raise ConfigError(
+            "'collection.max_response_bytes' must be an integer from 1024 to 20971520."
+        )
+    if (
+        isinstance(max_linked_assets, bool)
+        or not isinstance(max_linked_assets, int)
+        or not 0 <= max_linked_assets <= 100
+    ):
+        raise ConfigError(
+            "'collection.max_linked_assets' must be an integer from 0 to 100."
+        )
+    if (
+        isinstance(request_interval, bool)
+        or not isinstance(request_interval, (int, float))
+        or not 0 <= request_interval <= 60
+    ):
+        raise ConfigError(
+            "'collection.minimum_request_interval_seconds' must be between 0 and 60."
+        )
     collection["live_collection_approved"] = live_approved
     collection["max_response_bytes"] = max_response_bytes
     collection["max_linked_assets"] = max_linked_assets
