@@ -724,18 +724,21 @@ def execute_pipeline(
             raise PipelineError(
                 "Resume refused because engagement scope changed. Start a new run."
             )
-    initialize_database(database_path)
     if state.get("status") in {"completed", "partial", "failed", "cancelled"}:
         raise PipelineError(f"Run {run_id} is terminal ({state['status']}) and cannot be resumed.")
 
     raw_directory = run_paths.directory / "evidence"
+    if raw_directory.is_symlink():
+        raise PipelineError(f"Refusing symlinked raw evidence directory: {raw_directory}")
     raw_directory.mkdir(mode=0o700, exist_ok=True)
     os.chmod(raw_directory, 0o700)
 
     source_outcomes: list[tuple[str, str]] = []
-    db = connect_database(database_path)
+    db: sqlite3.Connection | None = None
     try:
         with WorkspaceLock(workspace.engagement):
+            initialize_database(database_path)
+            db = connect_database(database_path)
             _register_database(
                 db, config, path, run_id, config_digest, scope_digest
             )
@@ -1023,22 +1026,32 @@ def execute_pipeline(
                 relationship_count=relationship_count,
                 finding_count=finding_count,
             )
-    except Exception as exc:
+    except BaseException as exc:
         try:
             state_now = json.loads(run_paths.state.read_text(encoding="utf-8"))
-            if state_now.get("status") not in {"completed", "partial", "failed", "cancelled"}:
+            target_status = state_now.get("status")
+            if target_status not in {"completed", "partial", "failed", "cancelled"}:
                 finalize_run(run_paths, "interrupted")
-            with transaction(db, immediate=True):
-                db.execute(
-                    "UPDATE run SET status='interrupted', finished_at=? WHERE run_id=?",
-                    (_now(), run_id),
-                )
+                target_status = "interrupted"
+            if db is not None:
+                with transaction(db, immediate=True):
+                    db.execute(
+                        "UPDATE run SET status=?, finished_at=? WHERE run_id=?",
+                        (
+                            target_status,
+                            state_now.get("finished_at") or _now(),
+                            run_id,
+                        ),
+                    )
         except Exception:
             pass
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
         if isinstance(exc, (PipelineError, PersistenceError, RunError)):
             raise
         raise PipelineError(
             "The FII pipeline failed; inspect the run state and source diagnostics."
         ) from exc
     finally:
-        db.close()
+        if db is not None:
+            db.close()
